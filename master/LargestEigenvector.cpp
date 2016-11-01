@@ -6,6 +6,8 @@
 #include "TensorContraction.hpp"
 #include "mkl.h"
 #include <cmath>
+#include <limits>
+#include "omp.h"
 
 namespace pwm
 {
@@ -49,7 +51,7 @@ namespace pwm
 	// 1__|__3   2_|
 	void applyMPS(char L_R, tensor &in, tensor &x, double &norm)
 	{
-		normalize(x.size, x.ptns);
+		getNorm2(x.size, x.ptns);
 		switch (L_R)
 		{
 		case 'L':
@@ -64,30 +66,106 @@ namespace pwm
 			std::cout << "control char mismatch" << std::endl;
 			break;
 		}
-		norm = normalize(x.size, x.ptns);
+		norm = getNorm2(x.size, x.ptns);
 		return;
 	}
 
-	double normalize(int size, double *&x)
-	{
-		double norm = cblas_ddot(size, x, 1, x, 1);
-		double *out = (double *)MKL_calloc(size, sizeof(double), MKLalignment);
-		norm = std::sqrt(norm);
-		cblas_daxpy(size, 1 / norm, x, 1, out, 1);
-		MKL_free(x);
-		x = out;
-		return norm;
-	}
-
+	//************************************
+	// Method:    getNorm
+	// FullName:  pwm::getNorm
+	// Access:    public 
+	// Returns:   double
+	// Qualifier:
+	// Parameter: int size
+	// Parameter: double * in
+	// P.S:       in-place normalization, return coefficient, and perform normalization
+	//			  correctness guaranteed, but in a relatively low accuracy
+	// Note:      multiply won't affect accuracy, while add will
+	//************************************
 	double getNorm(int size, double *in)
 	{
-		double norm = 0;
+		double norm = 0, reciprocal = 1;
 #pragma omp parallel for reduction(+:norm)
 		for (int i = 0; i < size; i++)
 		{
 			norm = norm + in[i] * in[i];
 		}
 		norm = std::sqrt(norm);
+		if (std::abs(norm - 1.0) < 1e-15)
+		{
+			return 1.0;
+		}
+		reciprocal = 1.0 / norm;
+#pragma omp parallel for
+		for (int i = 0; i < size; i++)
+		{
+			in[i] *= reciprocal;
+		}
+		return norm;
+	}
+
+	//************************************
+	// Method:    getNorm2
+	// FullName:  pwm::getNorm2
+	// Access:    public 
+	// Returns:   double
+	// Qualifier:
+	// Parameter: int size
+	// Parameter: double * in
+	// P.S:       can achieve high accuracy, using a strange algorithm copied from dnrm2.f
+	//************************************
+	double getNorm2(int size, double *in)
+	{
+		double norm = 0.0, reciprocal = 1.0;
+#pragma omp parallel reduction(+:norm)
+		{
+			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
+			threads_total = omp_get_num_threads();
+			thread_num = omp_get_thread_num();
+			remain = size%threads_total;
+			chunk = size / threads_total;
+			if (remain != 0 && thread_num < remain)
+			{
+				chunk++;
+			}
+			thread_start = thread_num*chunk;
+			if (remain != 0 && thread_num >= remain)
+			{
+				thread_start += remain;
+			}
+			thread_finish = thread_start + chunk;
+
+			double absxi = 0.0, scale = 0.0, ssq = 1.0;
+			for (int i = thread_start; i < thread_finish; i++)
+			{
+				if (in[i] != 0.0)
+				{
+					absxi = std::abs(in[i]);
+					if (scale < absxi)
+					{
+						ssq = 1.0 + ssq*(scale*scale) / (absxi*absxi);
+						scale = absxi;
+					}
+					else
+					{
+						ssq += (absxi*absxi) / (scale*scale);
+					}
+				}
+			}
+			norm = scale*scale*ssq;
+		}
+
+		norm = std::sqrt(norm);
+		if (std::abs(norm - 1.0) < std::numeric_limits<double>::epsilon())
+		{
+			return 1.0;
+		}
+		reciprocal = 1.0 / norm;
+#pragma omp parallel for
+		for (int i = 0; i < size; i++)
+		{
+			in[i] *= reciprocal;
+		}
 		return norm;
 	}
 }

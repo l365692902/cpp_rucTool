@@ -11,7 +11,7 @@ namespace pwm
 		std::array<double *, MaxNumTensor>lam_out
 		);
 	void applyMPS(char L_R, tensor &in, tensor &x, double &norm);
-	double normalize(int size, double *&x);
 	double getNorm(int size, double *in);
+	double getNorm2(int size, double *in);
 
 }
