@@ -23,6 +23,7 @@ namespace pwm
 		std::array<tensor *, MaxNumTensor> T_in,
 		tensor &x_in,
 		double Converge_in,
+		int MaxIter,
 		std::array<tensor *, MaxNumTensor> y_out,
 		std::array<double *, MaxNumTensor>lam_out
 		)
@@ -168,4 +169,126 @@ namespace pwm
 		}
 		return norm;
 	}
+
+	int getIdamax(int size, double *in)
+	{
+		int cores;
+#pragma omp parallel
+		{
+			if (omp_get_thread_num() == 0)
+			{
+				cores = omp_get_num_threads();
+			}
+		}
+		int *index = (int *)MKL_malloc(cores*sizeof(int), 64);
+#pragma omp parallel
+		{
+			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
+			threads_total = omp_get_num_threads();
+			thread_num = omp_get_thread_num();
+			remain = size%threads_total;
+			chunk = size / threads_total;
+			if (remain != 0 && thread_num < remain)
+			{
+				chunk++;
+			}
+			thread_start = thread_num*chunk;
+			if (remain != 0 && thread_num >= remain)
+			{
+				thread_start += remain;
+			}
+			thread_finish = thread_start + chunk;
+
+			double dmax = std::abs(in[thread_start]);
+			//std::cout << thread_start << std::endl;
+			double abs = 0.0;
+			for (int i = thread_start + 1; i < thread_finish; i++)
+			{
+				//std::cout << i << std::endl;
+				if ((abs = std::abs(in[i])) > dmax)
+				{
+					index[thread_num] = i;
+					dmax = abs;
+				}
+			}
+		}
+		double outdmax = std::abs(in[index[0]]);
+		//std::cout << index[0] << std::endl;
+		double outabs = 0.0;
+		int result = index[0];
+		for (int i = 1; i < cores; i++)
+		{
+			//std::cout << index[i] << std::endl;
+			if ((outabs = std::abs(in[index[i]])) > outdmax)
+			{
+				result = index[i];
+				outdmax = outabs;
+			}
+		}
+		MKL_free(index);
+		return result;
+
+	}
+
+	double getMax(int size, double *in)
+	{
+		int cores;
+#pragma omp parallel
+		{
+			if (omp_get_thread_num() == 0)
+			{
+				cores = omp_get_num_threads();
+			}
+		}
+		int *index = (int *)MKL_malloc(cores*sizeof(int), 64);
+#pragma omp parallel
+		{
+			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
+			threads_total = omp_get_num_threads();
+			thread_num = omp_get_thread_num();
+			remain = size%threads_total;
+			chunk = size / threads_total;
+			if (remain != 0 && thread_num < remain)
+			{
+				chunk++;
+			}
+			thread_start = thread_num*chunk;
+			if (remain != 0 && thread_num >= remain)
+			{
+				thread_start += remain;
+			}
+			thread_finish = thread_start + chunk;
+
+			double dmax = std::abs(in[thread_start]);
+			//std::cout << thread_start << std::endl;
+			double abs = 0.0;
+			for (int i = thread_start + 1; i < thread_finish; i++)
+			{
+				//std::cout << i << std::endl;
+				if ((abs = std::abs(in[i])) > dmax)
+				{
+					index[thread_num] = i;
+					dmax = abs;
+				}
+			}
+		}
+		double outdmax = std::abs(in[index[0]]);
+		//std::cout << index[0] << std::endl;
+		double outabs = 0.0;
+		int result = index[0];
+		for (int i = 1; i < cores; i++)
+		{
+			//std::cout << index[i] << std::endl;
+			if ((outabs = std::abs(in[index[i]])) > outdmax)
+			{
+				result = index[i];
+				outdmax = outabs;
+			}
+		}
+		MKL_free(index);
+		return std::abs(in[result]);
+
+	}
+
+
 }

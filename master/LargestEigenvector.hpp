@@ -13,5 +13,7 @@ namespace pwm
 	void applyMPS(char L_R, tensor &in, tensor &x, double &norm);
 	double getNorm(int size, double *in);
 	double getNorm2(int size, double *in);
+	int getIdamax(int size, double *in);
+	double getMax(int size, double *in);
 
 }
