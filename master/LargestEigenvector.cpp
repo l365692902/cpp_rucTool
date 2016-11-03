@@ -8,6 +8,7 @@
 #include <cmath>
 #include <limits>
 #include "omp.h"
+#include <cstring>
 
 namespace pwm
 {
@@ -25,21 +26,59 @@ namespace pwm
 		double Converge_in,
 		int MaxIter,
 		std::array<tensor *, MaxNumTensor> y_out,
-		std::array<double *, MaxNumTensor>lam_out
+		std::array<double *, MaxNumTensor> lam_out
 		)
 	{
-		int cntT = 0;
+		int cntT = 0, x_size = x_in.size;
 		while (T_in[cntT] != 0)
 		{
 			cntT++;
 		}
 		tensor T_alan, Tx_bob;
-		for (int i = cntT - 1; i >= 0; i--)
+		double error0 = 1.0, p_lam0 = 0.0, error_total;
+		std::array<double, MaxNumTensor> p_lam;
+		std::array<double *, MaxNumTensor> p_y;
+		std::array<double, 2 * MaxNumTensor> error;
+		while (error0 > Converge_in)
 		{
-			applyMPS('R', *T_in[i], x_in, *lam_out[i]);
-			*y_out[i] = x_in;
-
+			for (int i = cntT - 1; i >= 0; i--)//one time
+			{
+				applyOneMPS('R', *T_in[i], x_in, *lam_out[i]);
+				//*y_out[i] = x_in;
+			}
+			error0 = std::abs(*lam_out[0] - p_lam0);
+			p_lam0 = *lam_out[0];
+			std::cout << "error: " << error0 << " lambda: " << *lam_out[0] << std::endl;
 		}
+
+		for (int i = 0; i < cntT; i++)//store results
+		{
+			p_lam[i] = *lam_out[i];
+			p_y[i] = (double *)MKL_malloc(x_size*sizeof(double), MKLalignment);
+		}
+
+		for (int i = cntT - 1; i >= 0; i--)//one more time
+		{
+			applyOneMPS('R', *T_in[i], x_in, *lam_out[i]);
+			*y_out[i] = x_in;
+			std::memcpy(p_y[i], y_out[i], x_size*sizeof(double));
+		}
+
+		for (int i = 0; i < cntT; i++)
+		{
+			error[2 * i] = p_lam[i] - *lam_out[i];
+			vdSub(x_size, p_y[i], y_out[i]->ptns, p_y[i]);
+			error[2 * i + 1] = (p_y[i])[cblas_idamax(x_size, p_y[i], 1)];
+		}
+
+		error_total = error[cblas_idamax(cntT * 2, error.data(), 1)];
+		std::cout << "total_error: " << error_total << std::endl;
+
+		for (int i = 0; i < cntT; i++)
+		{
+			MKL_free(p_y[i]);
+		}
+
 		return;
 	}
 
@@ -50,9 +89,9 @@ namespace pwm
 	//  D
 	//    2      1__
 	// 1__|__3   2_|
-	void applyMPS(char L_R, tensor &in, tensor &x, double &norm)
+	void applyOneMPS(char L_R, tensor &in, tensor &x, double &norm)
 	{
-		getNorm2(x.size, x.ptns);
+		//getNorm2(x.size, x.ptns);
 		switch (L_R)
 		{
 		case 'L':
@@ -170,17 +209,21 @@ namespace pwm
 		return norm;
 	}
 
+	//************************************
+	// Method:    getIdamax
+	// FullName:  pwm::getIdamax
+	// Access:    public 
+	// Returns:   int
+	// Qualifier:
+	// Parameter: int size
+	// Parameter: double * in
+	// P.S:       find largest magnitude element's index
+	//************************************
 	int getIdamax(int size, double *in)
 	{
-		int cores;
-#pragma omp parallel
-		{
-			if (omp_get_thread_num() == 0)
-			{
-				cores = omp_get_num_threads();
-			}
-		}
-		int *index = (int *)MKL_malloc(cores*sizeof(int), 64);
+		int cores = omp_get_max_threads();
+		//int *index = (int *)MKL_malloc(cores*sizeof(int), MKLalignment);
+		int *index = (int *)MKL_calloc(cores, sizeof(int), MKLalignment);
 #pragma omp parallel
 		{
 			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
@@ -232,15 +275,10 @@ namespace pwm
 
 	double getMax(int size, double *in)
 	{
-		int cores;
-#pragma omp parallel
-		{
-			if (omp_get_thread_num() == 0)
-			{
-				cores = omp_get_num_threads();
-			}
-		}
-		int *index = (int *)MKL_malloc(cores*sizeof(int), 64);
+		int cores = omp_get_max_threads();
+		//int *index = (int *)MKL_malloc(cores*sizeof(int), MKLalignment);
+		int *index = (int *)MKL_calloc(cores, sizeof(int), MKLalignment);
+
 #pragma omp parallel
 		{
 			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
@@ -290,5 +328,71 @@ namespace pwm
 
 	}
 
+	double getDiff(char L_R_A_N, int size, double *L, double *R)
+	{
+		double *tmpL = NULL;
+		double *tmpR = NULL;
+		double result = 0;
+		if (L == NULL)
+		{
+			if (R == NULL)
+			{
+				return 0.0;
+			}
+			else
+			{
+				//return std::abs(R[cblas_idamax(size, R, 1)]);
+				return getMax(size, R);
+			}
+		}
+		else if (R == NULL)
+		{
+			//return std::abs(L[cblas_idamax(size, L, 1)]);
+			return getMax(size, L);
+		}
+
+		switch (L_R_A_N)
+		{
+		case 'A':
+			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			//tmpR = (double *)std::realloc(tmpR, size*sizeof(double));
+			tmpR = (double *)MKL_realloc(tmpR, size*sizeof(double));
+			vdAbs(size, L, tmpL);
+			vdAbs(size, R, tmpR);
+			vdSub(size, tmpL, tmpR, tmpL);
+			//result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
+			result = getMax(size, tmpL);
+			break;
+		case 'L':
+			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			vdAbs(size, L, tmpL);
+			vdSub(size, tmpL, R, tmpL);
+			//result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
+			result = getMax(size, tmpL);
+			break;
+		case 'R':
+			//tmpR = (double *)std::realloc(tmpR, size*sizeof(double));
+			tmpR = (double *)MKL_realloc(tmpR, size*sizeof(double));
+			vdAbs(size, R, tmpR);
+			vdSub(size, L, tmpR, tmpR);
+			//result = std::abs(tmpR[cblas_idamax(size, tmpR, 1)]);
+			result = getMax(size, tmpR);
+			break;
+		default:
+			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			vdSub(size, L, R, tmpL);
+			//result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
+			result = getMax(size, tmpL);
+			break;
+		}
+		//delete[] tmpL;
+		MKL_free(tmpL);
+		//delete[] tmpR;
+		MKL_free(tmpR);
+		return result;
+	}
 
 }
