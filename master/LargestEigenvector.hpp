@@ -4,12 +4,13 @@
 namespace pwm
 {
 	void largestEigenvalue(
+		char L_R,
 		std::array<tensor *, MaxNumTensor> T_in,
 		tensor &x_in,
 		double Converge_in,
-		int MaxIter,
+		int MaxIter_in,
 		std::array<tensor *, MaxNumTensor> y_out,
-		std::array<double *, MaxNumTensor>lam_out
+		std::array<double *, MaxNumTensor> lam_out
 		);
 	void applyOneMPS(char L_R, tensor &in, tensor &x, double &norm);
 	double getNorm(int size, double *in);

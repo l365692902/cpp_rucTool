@@ -21,60 +21,83 @@ namespace pwm
 	// 1__|__3   2_|
 	// under construction...
 	void largestEigenvalue(
+		char L_R,
 		std::array<tensor *, MaxNumTensor> T_in,
 		tensor &x_in,
 		double Converge_in,
-		int MaxIter,
+		int MaxIter_in,
 		std::array<tensor *, MaxNumTensor> y_out,
 		std::array<double *, MaxNumTensor> lam_out
 		)
 	{
-		int cntT = 0, x_size = x_in.size;
-		while (T_in[cntT] != 0)
+		int Tensor_cnt = 0, x_size = x_in.size;
+		while (T_in[Tensor_cnt] != 0)
 		{
-			cntT++;
+			Tensor_cnt++;
 		}
 		tensor T_alan, Tx_bob;
-		double error0 = 1.0, p_lam0 = 0.0, error_total;
-		std::array<double, MaxNumTensor> p_lam;
+		double error0 = 1.0, p_lam0 = 0.0, error_total = 1.0;
+		std::array<double, MaxNumTensor> p_lam{};
 		std::array<double *, MaxNumTensor> p_y;
 		std::array<double, 2 * MaxNumTensor> error;
+		std::array<int, MaxNumTensor> order;
+		switch (L_R)
+		{
+		case 'L':
+			for (int i = 0; i < Tensor_cnt; i++)
+			{
+				order[i] = i;//0,1,2,3,4,...
+			}
+			break;
+		case 'R':
+			for (int i = Tensor_cnt - 1; i >= 0; i--)
+			{
+				order[i] = i;//n...4,3,2,1,0
+			}
+			break;
+		default:
+			std::cout << "largestEigenvalue::mod_mismatch" << std::endl;
+			break;
+		}
 		while (error0 > Converge_in)
 		{
-			for (int i = cntT - 1; i >= 0; i--)//one time
+			for (int i = 0; i < Tensor_cnt; i++)//one time
 			{
-				applyOneMPS('R', *T_in[i], x_in, *lam_out[i]);
-				//*y_out[i] = x_in;
+				applyOneMPS(L_R, *T_in[order[i]], x_in, *lam_out[order[i]]);
 			}
 			error0 = std::abs(*lam_out[0] - p_lam0);
 			p_lam0 = *lam_out[0];
+			//error0 = getMax(cntT, sub_lam.data());
 			std::cout << "error: " << error0 << " lambda: " << *lam_out[0] << std::endl;
 		}
-
-		for (int i = 0; i < cntT; i++)//store results
+		for (int i = 0; i < Tensor_cnt; i++)
 		{
-			p_lam[i] = *lam_out[i];
-			p_y[i] = (double *)MKL_malloc(x_size*sizeof(double), MKLalignment);
+			p_y[i] = (double *)MKL_calloc(x_size, sizeof(double), MKLalignment);
 		}
 
-		for (int i = cntT - 1; i >= 0; i--)//one more time
+		int error_cnt = 0;
+		while (error_total > Converge_in)
 		{
-			applyOneMPS('R', *T_in[i], x_in, *lam_out[i]);
-			*y_out[i] = x_in;
-			std::memcpy(p_y[i], y_out[i], x_size*sizeof(double));
+			error_cnt = 0;
+			for (int i = 0; i < Tensor_cnt; i++)
+			{
+				applyOneMPS(L_R, *T_in[order[i]], x_in, *lam_out[order[i]]);
+				*y_out[order[i]] = x_in;
+				error[error_cnt] = p_lam[order[i]] - *lam_out[order[i]];
+				error_cnt++;
+				p_lam[order[i]] = *lam_out[order[i]];//for next step
+				vdSub(x_size, p_y[order[i]], y_out[order[i]]->ptns, p_y[order[i]]);
+				error[error_cnt] = getMax(x_size, p_y[order[i]]);
+				error_cnt++;
+				std::memcpy(p_y[order[i]], y_out[order[i]]->ptns, x_size*sizeof(double));//for next step
+			}
+			error_total = getMax(error_cnt, error.data());
+			std::cout << "error: " << error_total << " lambda: " << *lam_out[0] << std::endl;
 		}
 
-		for (int i = 0; i < cntT; i++)
-		{
-			error[2 * i] = p_lam[i] - *lam_out[i];
-			vdSub(x_size, p_y[i], y_out[i]->ptns, p_y[i]);
-			error[2 * i + 1] = (p_y[i])[cblas_idamax(x_size, p_y[i], 1)];
-		}
-
-		error_total = error[cblas_idamax(cntT * 2, error.data(), 1)];
 		std::cout << "total_error: " << error_total << std::endl;
 
-		for (int i = 0; i < cntT; i++)
+		for (int i = 0; i < Tensor_cnt; i++)
 		{
 			MKL_free(p_y[i]);
 		}
@@ -273,6 +296,16 @@ namespace pwm
 
 	}
 
+	//************************************
+	// Method:    getMax
+	// FullName:  pwm::getMax
+	// Access:    public 
+	// Returns:   double
+	// Qualifier:
+	// Parameter: int size
+	// Parameter: double * in
+	// P.S:       find largest magnitude element's magnitude
+	//************************************
 	double getMax(int size, double *in)
 	{
 		int cores = omp_get_max_threads();

@@ -9,9 +9,10 @@
 
 int main()
 {
-	pwm::tensor TA(4, 3, 4, 0), TB(4, 3, 4, 0), Tx(4, 4, 0);
-	pwm::tensor TAt(4, 3, 4, 0), TBt(4, 3, 4, 0), Txt(4, 4, 0);
-	pwm::tensor ya(4, 4, 0), yb(4, 4, 0);
+	int side = 40, mid = 3;
+	pwm::tensor TA(side, mid, side, 0), TB(side, mid, side, 0), Tx(side, side, 0);
+	pwm::tensor TAt(side, mid, side, 0), TBt(side, mid, side, 0), Txt(side, side, 0);
+	pwm::tensor ya(side, side, 0), yb(side, side, 0);
 	TA.ini_sequence();
 	TB.ini_sequence();
 	Tx.ini_sequence();
@@ -20,7 +21,7 @@ int main()
 	Txt = Tx;
 	double res1, res2, res1t, res2t;
 	//pwm::applyOneMPS('L', TB, Tx, res1);
-	pwm::largestEigenvalue({ { &TA, &TB } }, Tx, 1e-13, 1, { { &ya, &yb } }, { { &res1, &res2 } });
+	pwm::largestEigenvalue('R', { { &TA, &TB } }, Tx, 1e-13, 1, { { &ya, &yb } }, { { &res1, &res2 } });
 
 	pwm::tensorContract(TBt, Txt, "abi", "ci", "abc", Txt);
 	pwm::tensorContract(TBt, Txt, "aij", "bij", "ab", Txt);
@@ -35,6 +36,6 @@ int main()
 	//pwm::tensorContract(TBt, Txt, "ija", "ijb", "ab", Txt);
 	res2t = pwm::getNorm2(Txt.size, Txt.ptns);
 
-	std::cout << pwm::getDiff('N', 16, ya.ptns, Txt.ptns) << std::endl;
+	std::cout << pwm::getDiff('N', side*side, ya.ptns, Txt.ptns) << std::endl;
 	return 0;
 }
