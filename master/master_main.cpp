@@ -38,5 +38,4 @@ int main()
 
 	std::cout << pwm::getDiff('N', side*side, ya.ptns, Txt.ptns) << std::endl;
 	return 0;
-	return 0;
 }
