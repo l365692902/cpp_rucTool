@@ -71,12 +71,15 @@ namespace pwm
 	{
 		assert(in[0] != 0);
 		shp.clear();
+		size = 1;
 		int i = 0;
 		while (in[i] != 0)
 		{
-			shp.push_back(in[i++]);
+			shp.push_back(in[i]);
+			size *= in[i];
+			i++;
 		}
-
+		order = shp.size();
 		ptns = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
 		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
 		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
@@ -92,7 +95,88 @@ namespace pwm
 		IsOrdered = true;
 	}
 
+	void tensor::reset(std::array<int, MaxOrder> shape, double *pointer_tensor)
+	{
+		assert(shape[0] != 0);
+		shp.clear();
+		size = 1;
+		int i = 0;
+		while (shape[i] != 0)
+		{
+			shp.push_back(shape[i]);
+			size *= shape[i];
+			i++;
+		}
+		order = shp.size();
+		ptns = (double *)MKL_realloc(ptns, size*sizeof(double));
+		std::memcpy(ptns, pointer_tensor, size*sizeof(double));
+		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		int cumprod = 1;
+		unit[order - 1] = 1;
+		add_unit[order - 1] = 1;
+		for (int i = order - 2; i >= 0; i--)//get unit and add_unit based on shp
+		{
+			cumprod *= shp.at(i + 1);
+			unit[i] = cumprod;
+			add_unit[i] = 1;
+		}
+		IsOrdered = true;
+		return;
+	}
 
+
+
+	void tensor::reset(std::array<int, MaxOrder> in)
+	{
+		assert(in[0] != 0);
+		shp.clear();
+		size = 1;
+		int i = 0;
+		while (in[i] != 0)
+		{
+			shp.push_back(in[i]);
+			size *= in[i];
+			i++;
+		}
+		order = shp.size();
+		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		int cumprod = 1;
+		unit[order - 1] = 1;
+		add_unit[order - 1] = 1;
+		for (int i = order - 2; i >= 0; i--)//get unit and add_unit based on shp
+		{
+			cumprod *= shp.at(i + 1);
+			unit[i] = cumprod;
+			add_unit[i] = 1;
+		}
+		IsOrdered = true;
+		return;
+	}
+
+	void tensor::reset()
+	{
+		size = 1;
+		for (auto i : shp)
+		{
+			size *= i;
+		}
+		order = shp.size();
+		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		int cumprod = 1;
+		unit[order - 1] = 1;
+		add_unit[order - 1] = 1;
+		for (int i = order - 2; i >= 0; i--)//get unit and add_unit based on shp
+		{
+			cumprod *= shp.at(i + 1);
+			unit[i] = cumprod;
+			add_unit[i] = 1;
+		}
+		IsOrdered = true;
+		return;
+	}
 
 	void tensor::ini_rand(pwm::Rand &rand)
 	{

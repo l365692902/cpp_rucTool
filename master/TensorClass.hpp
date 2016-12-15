@@ -21,6 +21,10 @@ namespace pwm
 		tensor();
 		tensor(int fst, ...);
 		tensor(std::array<int, MaxOrder> in);
+		void reset(std::array<int, MaxOrder> shape, double * pointer);
+		void reset(std::array<int, MaxOrder> in);
+		void reset();
+		void assign(double * in);
 		void ini_rand(pwm::Rand &rand);
 		void ini_sequence();
 		tensor& operator=(const tensor& in);
@@ -42,6 +46,9 @@ namespace pwm
 		void operator>>(int idx);
 		void merge(int begin, int end);
 
+
+
+		void svd(int idx_for_rows_in, std::array<tensor*, 3> ULV_out);
 
 	};
 

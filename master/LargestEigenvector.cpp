@@ -112,24 +112,24 @@ namespace pwm
 	//  D
 	//    2      1__
 	// 1__|__3   2_|
-	void applyOneMPS(char L_R, tensor &in, tensor &x, double &norm)
+	void applyOneMPS(char L_R, tensor &in, tensor &x_io, double &norm)
 	{
 		//getNorm2(x.size, x.ptns);
 		switch (L_R)
 		{
 		case 'L':
-			tensorContract(x, in, x);
-			tensorContract(2, in, x, x);
+			tensorContract(x_io, in, x_io);
+			tensorContract(2, in, x_io, x_io);
 			break;
 		case 'R':
-			tensorContract(in, x, x);
-			tensorContract(x, in, 2, x);
+			tensorContract(in, x_io, x_io);
+			tensorContract(x_io, in, 2, x_io);
 			break;
 		default:
 			std::cout << "control char mismatch" << std::endl;
 			break;
 		}
-		norm = getNorm2(x.size, x.ptns);
+		norm = getNorm2(x_io.size, x_io.ptns);
 		return;
 	}
 
@@ -143,29 +143,48 @@ namespace pwm
 			Tensor_cnt++;
 		}
 		Mbond = T_in[0]->shp[0];
-		Env_out[0]->ptns = (double *)MKL_realloc(Env_out[0]->ptns, Mbond*Mbond*sizeof(double));
+
+		//a vector contains 1 1 1 ...
 		double *Identity = (double *)MKL_malloc(Mbond*sizeof(double), MKLalignment);
-		std::memset(Identity, 1.0, sizeof(double));
+		//this is a wrong calling
+		std::memset(Identity, 1.0, Mbond*sizeof(double));
+
+		//a diagnal matrix contains 1 1 1 ...
+		tensor *__x = new tensor(Mbond, Mbond, 0);
+		//this is a wrong calling
+		std::memset(__x->ptns, 0.0, sizeof(double));
+		cblas_dcopy(Mbond, Identity, 1, __x->ptns, Mbond + 1);
+
+		*Env_out[0] = *__x;
+
+		double redun_norm;
 		switch (L_R)
 		{
 		case 'L':
 			for (int i = 0; i < Tensor_cnt - 1; i++)
 			{
-				
-
-
+				applyOneMPS(L_R, *T_in[i], *__x, redun_norm);
+				*Env_out[i + 1] = *__x;
 			}
 			break;
 		case 'R':
+			for (int i = Tensor_cnt - 1; i > 0; i--)
+			{
+				applyOneMPS(L_R, *T_in[i], *__x, redun_norm);
+				*Env_out[i - 1] = *__x;
+			}
 			break;
 		default:
+			std::cout << "applyMPSsOnIdentity::mod_mismatch" << std::endl;
 			break;
 		}
-
+		MKL_free(Identity);
+		__x->~tensor();
 
 
 		return;
 	}
+
 	//************************************
 	// Method:    getNorm
 	// FullName:  pwm::getNorm

@@ -9,10 +9,8 @@
 
 int main()
 {
-	pwm::tensor A(10, 0), B(10, 0);
-	A.ini_sequence();
-	cblas_daxpy(10, 2.4, A.ptns, 1, A.ptns, 1);
-	;
+	std::vector<int> test;
+	test.assign({ 1,2,3 });
 	return 0;
 }
 
