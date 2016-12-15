@@ -18,5 +18,7 @@ namespace pwm
 	void resolve_perm(std::string idxA, std::string idxB, int *&permA, int *&permB, int &com_cnt);
 	void resolve_perm(std::string idxA, std::string idxB, std::string idxC, int *&permA, int *&permB, int &com_cnt, int *&permC);
 
+	void tensorContractDiag(char N_R, tensor &A, double *diag, tensor &C);
+	void tensorContractDiag(char N_R, double *diag, tensor &B, tensor &C);
 
 }

@@ -495,4 +495,81 @@ namespace pwm
 		return;
 	}
 
+
+	//N stands for normal product
+	//R stands for reciprocal, product the element-wise reciprocal of diag
+	//under construction
+	void tensorContractDiag(char N_R, tensor &A, double *diag, tensor &C)
+	{
+		int cols = A.shp.back();
+		int rows = A.size / cols;
+		bool keep__diag = false;
+		if (&A != &C)
+		{
+			C = A;
+		}
+		double *__diag = NULL;
+		switch (N_R)
+		{
+		case 'N':
+			__diag = diag;
+			keep__diag = true;
+			break;
+		case 'R':
+			__diag = (double *)MKL_malloc(cols*sizeof(double), MKLalignment);
+			vdInv(cols, diag, __diag);
+			break;
+		default:
+			std::cout << "tensorContractDiag::mod_mismatch" << std::endl;
+			break;
+		}
+
+		for (int i = 0; i < cols; i++)
+		{
+			cblas_daxpy(rows, __diag[i] - 1.0, C.ptns + i, cols, C.ptns + i, cols);
+		}
+
+		if (keep__diag == false)
+		{
+			MKL_free(__diag);
+		}
+
+		return;
+	}
+	void tensorContractDiag(char N_R, double *diag, tensor &B, tensor &C)
+	{
+		int rows = B.shp.front();
+		int cols = B.size / rows;
+		bool keep__diag = false;
+		if (&B != &C)
+		{
+			C = B;
+		}
+		double *__diag = NULL;
+		switch (N_R)
+		{
+		case 'N':
+			__diag = diag;
+			keep__diag = true;
+			break;
+		case 'R':
+			__diag = (double *)MKL_malloc(rows*sizeof(double), MKLalignment);
+			vdInv(rows, diag, __diag);
+			break;
+		default:
+			std::cout << "tensorContractDiag::mod_mismatch" << std::endl;
+			break;
+		}
+
+		for (int i = 0; i < rows; i++)
+		{
+			cblas_daxpy(cols, __diag[i] - 1.0, C.ptns + i*cols, 1, C.ptns + i*cols, 1);
+		}
+
+		if (keep__diag == false)
+		{
+			MKL_free(__diag);
+		}
+		return;
+	}
 }

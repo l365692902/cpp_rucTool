@@ -1,14 +1,14 @@
-#include "TensorClass.hpp"
-#include "LargestEigenvector.hpp"
-#include <array>
-#include "Common.hpp"
 #include <iostream>
-#include "TensorContraction.hpp"
-#include "mkl.h"
+#include <array>
 #include <cmath>
 #include <limits>
-#include "omp.h"
 #include <cstring>
+#include "mkl.h"
+#include "omp.h"
+#include "Common.hpp"
+#include "TensorClass.hpp"
+#include "LargestEigenvector.hpp"
+#include "TensorContraction.hpp"
 
 namespace pwm
 {
@@ -133,6 +133,39 @@ namespace pwm
 		return;
 	}
 
+	void applyMPSsOnIdentity(char L_R,
+		std::array<tensor *, MaxNumTensor> T_in,
+		std::array<tensor *, MaxNumTensor> Env_out)
+	{
+		int Tensor_cnt = 0, Mbond = 1;
+		while (T_in[Tensor_cnt] != 0)
+		{
+			Tensor_cnt++;
+		}
+		Mbond = T_in[0]->shp[0];
+		Env_out[0]->ptns = (double *)MKL_realloc(Env_out[0]->ptns, Mbond*Mbond*sizeof(double));
+		double *Identity = (double *)MKL_malloc(Mbond*sizeof(double), MKLalignment);
+		std::memset(Identity, 1.0, sizeof(double));
+		switch (L_R)
+		{
+		case 'L':
+			for (int i = 0; i < Tensor_cnt - 1; i++)
+			{
+				
+
+
+			}
+			break;
+		case 'R':
+			break;
+		default:
+			break;
+		}
+
+
+
+		return;
+	}
 	//************************************
 	// Method:    getNorm
 	// FullName:  pwm::getNorm

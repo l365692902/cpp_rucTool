@@ -9,6 +9,15 @@
 
 int main()
 {
+	pwm::tensor A(10, 0), B(10, 0);
+	A.ini_sequence();
+	cblas_daxpy(10, 2.4, A.ptns, 1, A.ptns, 1);
+	;
+	return 0;
+}
+
+int main_largest()
+{
 	int side = 40, mid = 3;
 	pwm::tensor TA(side, mid, side, 0), TB(side, mid, side, 0), Tx(side, side, 0);
 	pwm::tensor TAt(side, mid, side, 0), TBt(side, mid, side, 0), Txt(side, side, 0);
