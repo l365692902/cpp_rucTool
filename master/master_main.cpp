@@ -9,8 +9,12 @@
 
 int main()
 {
-	std::vector<int> test;
-	test.assign({ 1,2,3 });
+	pwm::tensor TA(17, 13, 0);
+	TA.ini_sequence();
+	pwm::tensor U, L, Vt;
+	double *lU = NULL, *lL = NULL, *lVt = NULL;
+	TA.svd(1, { {&U,&L,&Vt} });
+	TA.legacy_svd(1, 13, lU, lL, lVt);
 	return 0;
 }
 

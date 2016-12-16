@@ -6,21 +6,21 @@
 
 namespace pwm
 {
-		void tensor::merge(int begin, int end)
+	void tensor::merge(int begin, int end)
+	{
+		assert((begin > 0) && (end > begin) && (end <= shp.size()));
+		int times = end - begin;
+		for (int i = 0; i < times; i++)
 		{
-			assert((begin > 0) && (end > begin) && (end <= shp.size()));
-			int times = end - begin;
-			for (int i = 0; i < times; i++)
-			{
-				shp.at(begin - 1) *= shp.at(begin);
-				shp.erase(shp.begin() + begin);
-			}
+			shp.at(begin - 1) *= shp.at(begin);
+			shp.erase(shp.begin() + begin);
 		}
+	}
 
 
 
 
-	int tensor::calc_shp(int idx_1, int cnt_1) 
+	int tensor::calc_shp(int idx_1, int cnt_1)
 	{
 		int rslt = 1;
 		idx_1--;
@@ -159,6 +159,48 @@ namespace pwm
 			shp.erase(shp.begin() + idx - 1);
 		}
 	}
+
+		void tensor::legacy_svd(int idx4row, int preserve, double *&U, double *&LAM, double *&VT)
+		{
+			int rows = calc_shp(1, idx4row);
+			int cols = calc_shp(idx4row + 1, shp.size() - idx4row);
+			int size = rows*cols;
+			int rank = (std::min)(rows, cols);
+			if (preserve > rank)
+			{
+				preserve = rank;
+			}
+			double *u = new double[rows*rows];
+			double *lam = new double[rank];
+			double *vt = new double[cols*cols];
+			//U = (double *)realloc(U, sizeof(double)*rows*rows);
+			//lam = (double *)realloc(lam, sizeof(double)*rank);
+			//VT = (double *)realloc(VT, sizeof(double)*cols*cols);
+			//double *s = new double[rows];
+			double *superb = new double[rank - 1];
+			double *tmp = NULL;
+			tmp = new double[size];
+			std::memcpy(tmp, ptns, size*sizeof(double));
+			//cpy_A_to_B(tmp, ptns, size);
+			//after svd, A(tmp, ptns) will corrupt, so that using tmp
+			LAPACKE_dgesvd(CblasRowMajor, 'S', 'S', rows, cols, tmp, cols, lam, u, rank, vt, cols, superb);
+
+			U = (double *)std::realloc(U, sizeof(double)*rows*preserve);
+			MKL_Domatcopy('C', 'N', preserve, rows, 1.0, u, rank, U, preserve);//this is U
+			//MKL_Domatcopy('R', 'T', rows, preserve, 1.0, u, rank, U, rows);//actually UT
+			LAM = (double *)std::realloc(LAM, preserve*sizeof(double));
+			std::memcpy(LAM, lam, preserve*sizeof(double));
+			//cpy_L_to_R(lam, LAM, preserve);
+			VT = (double *)std::realloc(VT, preserve*cols*sizeof(double));
+			std::memcpy(VT, vt, preserve*cols*sizeof(double));
+			//cpy_L_to_R(vt, VT, preserve*cols);
+
+			delete[] u;
+			delete[] lam;
+			delete[] vt;
+			delete[] tmp;
+			delete[] superb;
+		}
 
 
 }

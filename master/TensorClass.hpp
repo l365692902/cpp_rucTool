@@ -44,6 +44,7 @@ namespace pwm
 		int calc_shp(int idx_1, int cnt_1);
 		void operator<<(int idx);
 		void operator>>(int idx);
+		void legacy_svd(int idx4row, int preserve, double *& U, double *& LAM, double *& VT);
 		void merge(int begin, int end);
 
 
