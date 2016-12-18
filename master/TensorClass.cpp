@@ -52,9 +52,9 @@ namespace pwm
 			order++;
 		}
 		va_end(p_arg);
-		ptns = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
-		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
-		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		ptns = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
+		unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
+		add_unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
 		int cumprod = 1;
 		unit[order - 1] = 1;
 		add_unit[order - 1] = 1;
@@ -80,9 +80,9 @@ namespace pwm
 			i++;
 		}
 		order = shp.size();
-		ptns = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
-		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
-		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		ptns = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
+		unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
+		add_unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
 		int cumprod = 1;
 		unit[order - 1] = 1;
 		add_unit[order - 1] = 1;
@@ -108,10 +108,10 @@ namespace pwm
 			i++;
 		}
 		order = shp.size();
-		ptns = (double *)MKL_realloc(ptns, size*sizeof(double));
-		std::memcpy(ptns, pointer_tensor, size*sizeof(double));
-		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
-		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		ptns = (double *)MKL_realloc(ptns, size * sizeof(double));
+		std::memcpy(ptns, pointer_tensor, size * sizeof(double));
+		unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
+		add_unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
 		int cumprod = 1;
 		unit[order - 1] = 1;
 		add_unit[order - 1] = 1;
@@ -140,8 +140,8 @@ namespace pwm
 			i++;
 		}
 		order = shp.size();
-		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
-		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
+		add_unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
 		int cumprod = 1;
 		unit[order - 1] = 1;
 		add_unit[order - 1] = 1;
@@ -163,8 +163,8 @@ namespace pwm
 			size *= i;
 		}
 		order = shp.size();
-		unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
-		add_unit = (int *)MKL_malloc(order*sizeof(double), MKLalignment);
+		unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
+		add_unit = (int *)MKL_malloc(order * sizeof(double), MKLalignment);
 		int cumprod = 1;
 		unit[order - 1] = 1;
 		add_unit[order - 1] = 1;
@@ -180,7 +180,7 @@ namespace pwm
 
 	void tensor::ini_rand(pwm::Rand &rand)
 	{
-		ptns = (double *)MKL_realloc(ptns, size*sizeof(double));
+		ptns = (double *)MKL_realloc(ptns, size * sizeof(double));
 		for (int i = 0; i < size; i++)
 		{
 			ptns[i] = rand.doub();
@@ -192,7 +192,7 @@ namespace pwm
 
 	void tensor::ini_sequence()
 	{
-		ptns = (double *)MKL_realloc(ptns, size*sizeof(double));
+		ptns = (double *)MKL_realloc(ptns, size * sizeof(double));
 		for (int i = 0; i < size; i++)
 		{
 			ptns[i] = i;
@@ -208,12 +208,12 @@ namespace pwm
 		size = in.size;
 		order = in.order;
 		IsOrdered = in.IsOrdered;
-		unit = (int *)MKL_realloc(unit, order*sizeof(int));
-		std::memcpy(unit, in.unit, order*sizeof(int));
-		add_unit = (int *)MKL_realloc(add_unit, order*sizeof(int));
-		std::memcpy(add_unit, in.add_unit, order*sizeof(int));
-		ptns = (double *)MKL_realloc(ptns, size*sizeof(double));
-		std::memcpy(ptns, in.ptns, size*sizeof(double));
+		unit = (int *)MKL_realloc(unit, order * sizeof(int));
+		std::memcpy(unit, in.unit, order * sizeof(int));
+		add_unit = (int *)MKL_realloc(add_unit, order * sizeof(int));
+		std::memcpy(add_unit, in.add_unit, order * sizeof(int));
+		ptns = (double *)MKL_realloc(ptns, size * sizeof(double));
+		std::memcpy(ptns, in.ptns, size * sizeof(double));
 		return *this;
 	}
 
@@ -221,7 +221,7 @@ namespace pwm
 	//permute indices outside loop
 	void tensor::permute1(int fst, ...)
 	{
-		int *perm_idx = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *perm_idx = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		va_list p_arg;
 		va_start(p_arg, fst);
 		perm_idx[0] = fst;
@@ -229,8 +229,8 @@ namespace pwm
 		while ((perm_idx[cnt++] = va_arg(p_arg, int)) != 0);
 		va_end(p_arg);
 
-		int *temp_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *temp_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		int *tns_pos = (int *)MKL_calloc(order, sizeof(int), MKLalignment);//initialize by zeros
 
 		for (int i = 0; i < order; i++)
@@ -246,7 +246,7 @@ namespace pwm
 			}
 		}
 
-		double *out = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
+		double *out = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
 		int pos = 0;
 		for (int i = 0; i < size; i++)
 		{
@@ -298,7 +298,7 @@ namespace pwm
 	//but permute indices inside loop
 	void tensor::permute2(int fst, ...)
 	{
-		int *perm_idx = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *perm_idx = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		va_list p_arg;
 		va_start(p_arg, fst);
 		perm_idx[0] = fst;
@@ -306,10 +306,10 @@ namespace pwm
 		while ((perm_idx[cnt++] = va_arg(p_arg, int)) != 0);
 		va_end(p_arg);
 
-		int *new_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *old_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *new_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *old_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		int *tns_pos = (int *)MKL_calloc(order, sizeof(int), MKLalignment);//initialize by zeros
-		int *tns_pos_ = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *tns_pos_ = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 
 		for (int i = 0; i < order; i++)
 		{
@@ -325,7 +325,7 @@ namespace pwm
 			unit[i] = cumprod;
 		}
 		//new_shp[order - 1]--;
-		double *out = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
+		double *out = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
 		int pos = 0;
 		for (int i = 0; i < size; i++)
 		{
@@ -374,7 +374,7 @@ namespace pwm
 	//locate by calculating pos += add_unit[]
 	void tensor::permute3(int fst, ...)
 	{
-		int *perm_idx = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *perm_idx = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		va_list p_arg;
 		va_start(p_arg, fst);
 		perm_idx[0] = fst;
@@ -382,8 +382,8 @@ namespace pwm
 		while ((perm_idx[cnt++] = va_arg(p_arg, int)) != 0);
 		va_end(p_arg);
 
-		int *temp_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *temp_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		int *tns_pos = (int *)MKL_calloc(order, sizeof(int), MKLalignment);//initialize by zeros
 
 		for (int i = 0; i < order; i++)
@@ -399,7 +399,7 @@ namespace pwm
 			}
 		}
 
-		double *out = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
+		double *out = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
 		int pos = 0;
 		int mark = 0;
 		for (int i = 0; i < size; i++)
@@ -458,7 +458,7 @@ namespace pwm
 	//************************************
 	void tensor::permute4(int fst, ...)
 	{
-		int *perm_idx = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *perm_idx = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		va_list p_arg;
 		va_start(p_arg, fst);
 		perm_idx[0] = fst;
@@ -466,8 +466,8 @@ namespace pwm
 		while ((perm_idx[cnt++] = va_arg(p_arg, int)) != 0);
 		va_end(p_arg);
 
-		int *temp_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *temp_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		for (int i = 0; i < order; i++)
 		{
 			temp_shp[i] = shp.at(perm_idx[i] - 1) - 1;//2,3,4 -> 2,4,3 -> 1,3,2
@@ -492,7 +492,7 @@ namespace pwm
 
 
 
-		double *out = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
+		double *out = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
 #pragma omp parallel
 		{
 			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
@@ -573,8 +573,8 @@ namespace pwm
 	//************************************
 	void tensor::permute(int *perm_idx)
 	{
-		int *temp_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *temp_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		for (int i = 0; i < order; i++)
 		{
 			temp_shp[i] = shp.at(perm_idx[i] - 1) - 1;//2,3,4 -> 2,4,3 -> 1,3,2
@@ -597,7 +597,7 @@ namespace pwm
 			unit[i] = cumprod;
 		}
 
-		double *out = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
+		double *out = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
 #pragma omp parallel
 		{
 			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
@@ -682,11 +682,11 @@ namespace pwm
 	//************************************
 	void tensor::permute(int *perm_idx, tensor &B)
 	{
-		int *temp_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_add_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		B.unit = (int *)MKL_realloc(B.unit, order*sizeof(int));
-		B.add_unit = (int *)MKL_realloc(B.add_unit, order*sizeof(int));
+		int *temp_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_add_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		B.unit = (int *)MKL_realloc(B.unit, order * sizeof(int));
+		B.add_unit = (int *)MKL_realloc(B.add_unit, order * sizeof(int));
 		for (int i = 0; i < order; i++)
 		{
 			temp_shp[i] = shp.at(perm_idx[i] - 1) - 1;//2,3,4 -> 2,4,3 -> 1,3,2
@@ -708,7 +708,7 @@ namespace pwm
 			B.unit[i] = cumprod;
 		}
 
-		double *out = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
+		double *out = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
 #pragma omp parallel
 		{
 			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
@@ -785,8 +785,8 @@ namespace pwm
 
 	void tensor::permute(std::array<int, MaxOrder> perm_idx)
 	{
-		int *temp_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
+		int *temp_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
 		for (int i = 0; i < order; i++)
 		{
 			temp_shp[i] = shp.at(perm_idx[i] - 1) - 1;//2,3,4 -> 2,4,3 -> 1,3,2
@@ -809,7 +809,7 @@ namespace pwm
 			unit[i] = cumprod;
 		}
 
-		double *out = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
+		double *out = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
 #pragma omp parallel
 		{
 			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;
@@ -879,11 +879,11 @@ namespace pwm
 
 	void tensor::permute(std::array<int, MaxOrder> perm_idx, tensor &B)
 	{
-		int *temp_shp = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		int *temp_add_unit = (int *)MKL_malloc(order*sizeof(int), MKLalignment);
-		B.unit = (int *)MKL_realloc(B.unit, order*sizeof(int));
-		B.add_unit = (int *)MKL_realloc(B.add_unit, order*sizeof(int));
+		int *temp_shp = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		int *temp_add_unit = (int *)MKL_malloc(order * sizeof(int), MKLalignment);
+		B.unit = (int *)MKL_realloc(B.unit, order * sizeof(int));
+		B.add_unit = (int *)MKL_realloc(B.add_unit, order * sizeof(int));
 		for (int i = 0; i < order; i++)
 		{
 			temp_shp[i] = shp.at(perm_idx[i] - 1) - 1;//2,3,4 -> 2,4,3 -> 1,3,2
@@ -905,7 +905,7 @@ namespace pwm
 			B.unit[i] = cumprod;
 		}
 
-		double *out = (double *)MKL_malloc(size*sizeof(double), MKLalignment);
+		double *out = (double *)MKL_malloc(size * sizeof(double), MKLalignment);
 #pragma omp parallel
 		{
 			int thread_start, thread_finish, threads_total, thread_num, chunk, remain;

@@ -28,7 +28,7 @@ namespace pwm
 		int MaxIter_in,
 		std::array<tensor *, MaxNumTensor> y_out,
 		std::array<double *, MaxNumTensor> lam_out
-		)
+	)
 	{
 		int Tensor_cnt = 0, x_size = x_in.size;
 		while (T_in[Tensor_cnt] != 0)
@@ -89,7 +89,7 @@ namespace pwm
 				vdSub(x_size, p_y[order[i]], y_out[order[i]]->ptns, p_y[order[i]]);
 				error[error_cnt] = getMax(x_size, p_y[order[i]]);
 				error_cnt++;
-				std::memcpy(p_y[order[i]], y_out[order[i]]->ptns, x_size*sizeof(double));//for next step
+				std::memcpy(p_y[order[i]], y_out[order[i]]->ptns, x_size * sizeof(double));//for next step
 			}
 			error_total = getMax(error_cnt, error.data());
 			std::cout << "error: " << error_total << " lambda: " << *lam_out[0] << std::endl;
@@ -145,9 +145,9 @@ namespace pwm
 		Mbond = T_in[0]->shp[0];
 
 		//a vector contains 1 1 1 ...
-		double *Identity = (double *)MKL_malloc(Mbond*sizeof(double), MKLalignment);
+		double *Identity = (double *)MKL_malloc(Mbond * sizeof(double), MKLalignment);
 		//this is a wrong calling
-		std::memset(Identity, 1.0, Mbond*sizeof(double));
+		std::memset(Identity, 1.0, Mbond * sizeof(double));
 
 		//a diagnal matrix contains 1 1 1 ...
 		tensor *__x = new tensor(Mbond, Mbond, 0);
@@ -440,9 +440,9 @@ namespace pwm
 		{
 		case 'A':
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			//tmpR = (double *)std::realloc(tmpR, size*sizeof(double));
-			tmpR = (double *)MKL_realloc(tmpR, size*sizeof(double));
+			tmpR = (double *)MKL_realloc(tmpR, size * sizeof(double));
 			vdAbs(size, L, tmpL);
 			vdAbs(size, R, tmpR);
 			vdSub(size, tmpL, tmpR, tmpL);
@@ -451,7 +451,7 @@ namespace pwm
 			break;
 		case 'L':
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			vdAbs(size, L, tmpL);
 			vdSub(size, tmpL, R, tmpL);
 			//result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
@@ -459,7 +459,7 @@ namespace pwm
 			break;
 		case 'R':
 			//tmpR = (double *)std::realloc(tmpR, size*sizeof(double));
-			tmpR = (double *)MKL_realloc(tmpR, size*sizeof(double));
+			tmpR = (double *)MKL_realloc(tmpR, size * sizeof(double));
 			vdAbs(size, R, tmpR);
 			vdSub(size, L, tmpR, tmpR);
 			//result = std::abs(tmpR[cblas_idamax(size, tmpR, 1)]);
@@ -467,7 +467,7 @@ namespace pwm
 			break;
 		default:
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			vdSub(size, L, R, tmpL);
 			//result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
 			result = getMax(size, tmpL);

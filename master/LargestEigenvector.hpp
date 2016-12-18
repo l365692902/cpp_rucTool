@@ -11,7 +11,7 @@ namespace pwm
 		int MaxIter_in,
 		std::array<tensor *, MaxNumTensor> y_out,
 		std::array<double *, MaxNumTensor> lam_out
-		);
+	);
 	void applyOneMPS(char L_R, tensor &in, tensor &x_io, double &norm);
 	void applyMPSsOnIdentity(char L_R,
 		std::array<tensor *, MaxNumTensor> T_in,

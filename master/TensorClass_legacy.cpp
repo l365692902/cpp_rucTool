@@ -80,9 +80,9 @@ namespace pwm
 			legacy_size = calc_shp(1, idx);
 			remnant = calc_shp(idx + 1, shp.size() - idx);
 			//k = new int[size];
-			k = (int *)MKL_malloc(legacy_size*sizeof(int), MKLalignment);
+			k = (int *)MKL_malloc(legacy_size * sizeof(int), MKLalignment);
 			//fk = new float[size];
-			fk = (float *)MKL_malloc(legacy_size*sizeof(float), MKLalignment);
+			fk = (float *)MKL_malloc(legacy_size * sizeof(float), MKLalignment);
 			//std::cout << "any thing wrong?" << std::endl;
 			//memcpy_s(k, size*sizeof(int), kk, size*sizeof(int));
 			for (int i = 0; i < legacy_size; i++)
@@ -112,7 +112,7 @@ namespace pwm
 
 	}
 
-	void tensor::operator>>(int idx)
+	void tensor::operator >> (int idx)
 	{
 		//_ASSERT(idx <= shp.size());
 		assert(idx <= shp.size());
@@ -139,9 +139,9 @@ namespace pwm
 			y = calc_shp(idx + 1, shp.size() - idx);
 			legacy_size = shp.at(idx - 1)*y;
 			//k = new int[size];
-			k = (int *)MKL_malloc(legacy_size*sizeof(int), MKLalignment);
+			k = (int *)MKL_malloc(legacy_size * sizeof(int), MKLalignment);
 			//fk = new float[size];
-			fk = (float *)MKL_malloc(legacy_size*sizeof(float), MKLalignment);
+			fk = (float *)MKL_malloc(legacy_size * sizeof(float), MKLalignment);
 			for (int i = 0; i < legacy_size; i++)
 			{
 				((int *)fk)[i] = i + 1;
@@ -161,47 +161,47 @@ namespace pwm
 		}
 	}
 
-		void tensor::legacy_svd(int idx4row, int preserve, double *&U, double *&LAM, double *&VT)
+	void tensor::legacy_svd(int idx4row, int preserve, double *&U, double *&LAM, double *&VT)
+	{
+		int rows = calc_shp(1, idx4row);
+		int cols = calc_shp(idx4row + 1, shp.size() - idx4row);
+		int size = rows*cols;
+		int rank = (std::min)(rows, cols);
+		if (preserve > rank)
 		{
-			int rows = calc_shp(1, idx4row);
-			int cols = calc_shp(idx4row + 1, shp.size() - idx4row);
-			int size = rows*cols;
-			int rank = (std::min)(rows, cols);
-			if (preserve > rank)
-			{
-				preserve = rank;
-			}
-			double *u = new double[rows*rows];
-			double *lam = new double[rank];
-			double *vt = new double[cols*cols];
-			//U = (double *)realloc(U, sizeof(double)*rows*rows);
-			//lam = (double *)realloc(lam, sizeof(double)*rank);
-			//VT = (double *)realloc(VT, sizeof(double)*cols*cols);
-			//double *s = new double[rows];
-			double *superb = new double[rank - 1];
-			double *tmp = NULL;
-			tmp = new double[size];
-			std::memcpy(tmp, ptns, size*sizeof(double));
-			//cpy_A_to_B(tmp, ptns, size);
-			//after svd, A(tmp, ptns) will corrupt, so that using tmp
-			LAPACKE_dgesvd(CblasRowMajor, 'S', 'S', rows, cols, tmp, cols, lam, u, rank, vt, cols, superb);
-
-			U = (double *)std::realloc(U, sizeof(double)*rows*preserve);
-			MKL_Domatcopy('C', 'N', preserve, rows, 1.0, u, rank, U, preserve);//this is U
-			//MKL_Domatcopy('R', 'T', rows, preserve, 1.0, u, rank, U, rows);//actually UT
-			LAM = (double *)std::realloc(LAM, preserve*sizeof(double));
-			std::memcpy(LAM, lam, preserve*sizeof(double));
-			//cpy_L_to_R(lam, LAM, preserve);
-			VT = (double *)std::realloc(VT, preserve*cols*sizeof(double));
-			std::memcpy(VT, vt, preserve*cols*sizeof(double));
-			//cpy_L_to_R(vt, VT, preserve*cols);
-
-			delete[] u;
-			delete[] lam;
-			delete[] vt;
-			delete[] tmp;
-			delete[] superb;
+			preserve = rank;
 		}
+		double *u = new double[rows*rows];
+		double *lam = new double[rank];
+		double *vt = new double[cols*cols];
+		//U = (double *)realloc(U, sizeof(double)*rows*rows);
+		//lam = (double *)realloc(lam, sizeof(double)*rank);
+		//VT = (double *)realloc(VT, sizeof(double)*cols*cols);
+		//double *s = new double[rows];
+		double *superb = new double[rank - 1];
+		double *tmp = NULL;
+		tmp = new double[size];
+		std::memcpy(tmp, ptns, size * sizeof(double));
+		//cpy_A_to_B(tmp, ptns, size);
+		//after svd, A(tmp, ptns) will corrupt, so that using tmp
+		LAPACKE_dgesvd(CblasRowMajor, 'S', 'S', rows, cols, tmp, cols, lam, u, rank, vt, cols, superb);
+
+		U = (double *)std::realloc(U, sizeof(double)*rows*preserve);
+		MKL_Domatcopy('C', 'N', preserve, rows, 1.0, u, rank, U, preserve);//this is U
+		//MKL_Domatcopy('R', 'T', rows, preserve, 1.0, u, rank, U, rows);//actually UT
+		LAM = (double *)std::realloc(LAM, preserve * sizeof(double));
+		std::memcpy(LAM, lam, preserve * sizeof(double));
+		//cpy_L_to_R(lam, LAM, preserve);
+		VT = (double *)std::realloc(VT, preserve*cols * sizeof(double));
+		std::memcpy(VT, vt, preserve*cols * sizeof(double));
+		//cpy_L_to_R(vt, VT, preserve*cols);
+
+		delete[] u;
+		delete[] lam;
+		delete[] vt;
+		delete[] tmp;
+		delete[] superb;
+	}
 
 
 }

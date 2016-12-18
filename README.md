@@ -17,6 +17,15 @@ does it mean I can use dgesvd without worries?
 
 4) now I strongly think, I should use "tensor" through this whole project, discard "double *"
 
+5) questions about CanoFinMPS
+    * what does CanoFinMPS mean?
+    * should getLeftEnv, getRightEnv, CanoTransform, NormalizeMPS, these functions be available to outside canoFinMPS function?
+	* there seems to be some discrepancies between matlab code and the graph on white board!?
+
+6) a must be modified issue, in matlab, [U,S,V]=svd(A) means A = U * S * V', so I need one more transpose on V.
+
+7) I need to reconsider the structre of project, I think should put all one-tensor operators below TensorClass, and intergrate entire vml into tensor etc.
+
 ## log
 * 18th dec 2016, tested TensorClassSVD, small-scale test passed, below is the test code, using diff() to tell if they are equal
 ```

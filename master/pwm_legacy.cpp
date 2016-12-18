@@ -41,9 +41,9 @@ namespace pwm
 		{
 		case 'A':
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			//tmpR = (double *)std::realloc(tmpR, size*sizeof(double));
-			tmpR = (double *)MKL_realloc(tmpR, size*sizeof(double));
+			tmpR = (double *)MKL_realloc(tmpR, size * sizeof(double));
 			vdAbs(size, L.ptns, tmpL);
 			vdAbs(size, R.ptns, tmpR);
 			vdSub(size, tmpL, tmpR, tmpL);
@@ -51,21 +51,21 @@ namespace pwm
 			break;
 		case 'L':
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			vdAbs(size, L.ptns, tmpL);
 			vdSub(size, tmpL, R.ptns, tmpL);
 			result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
 			break;
 		case 'R':
 			//tmpR = (double *)std::realloc(tmpR, size*sizeof(double));
-			tmpR = (double *)MKL_realloc(tmpR, size*sizeof(double));
+			tmpR = (double *)MKL_realloc(tmpR, size * sizeof(double));
 			vdAbs(size, R.ptns, tmpR);
 			vdSub(size, L.ptns, tmpR, tmpR);
 			result = std::abs(tmpR[cblas_idamax(size, tmpR, 1)]);
 			break;
 		default:
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			vdSub(size, L.ptns, R.ptns, tmpL);
 			result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
 			break;
@@ -105,9 +105,9 @@ namespace pwm
 		{
 		case 'A':
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			//tmpR = (double *)std::realloc(tmpR, size*sizeof(double));
-			tmpR = (double *)MKL_realloc(tmpR, size*sizeof(double));
+			tmpR = (double *)MKL_realloc(tmpR, size * sizeof(double));
 			vdAbs(size, L, tmpL);
 			vdAbs(size, R, tmpR);
 			vdSub(size, tmpL, tmpR, tmpL);
@@ -115,21 +115,21 @@ namespace pwm
 			break;
 		case 'L':
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			vdAbs(size, L, tmpL);
 			vdSub(size, tmpL, R, tmpL);
 			result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
 			break;
 		case 'R':
 			//tmpR = (double *)std::realloc(tmpR, size*sizeof(double));
-			tmpR = (double *)MKL_realloc(tmpR, size*sizeof(double));
+			tmpR = (double *)MKL_realloc(tmpR, size * sizeof(double));
 			vdAbs(size, R, tmpR);
 			vdSub(size, L, tmpR, tmpR);
 			result = std::abs(tmpR[cblas_idamax(size, tmpR, 1)]);
 			break;
 		default:
 			//tmpL = (double *)std::realloc(tmpL, size*sizeof(double));
-			tmpL = (double *)MKL_realloc(tmpL, size*sizeof(double));
+			tmpL = (double *)MKL_realloc(tmpL, size * sizeof(double));
 			vdSub(size, L, R, tmpL);
 			result = std::abs(tmpL[cblas_idamax(size, tmpL, 1)]);
 			break;
@@ -211,7 +211,7 @@ namespace pwm
 			break;
 		}
 		//double *c = new double[left*right];
-		double *c = (double *)MKL_malloc(left*right*sizeof(double), MKLalignment);
+		double *c = (double *)MKL_malloc(left*right * sizeof(double), MKLalignment);
 		cblas_dgemm(CblasRowMajor, tranA, tranB, left, right, mid,
 			1.0, A.ptns, lda, B.ptns, ldb, 0.0, c, right);
 		//cpy_A_to_B(C.ptns, c, left*right);

@@ -77,9 +77,9 @@ namespace pwm
 		cruz->size = left*right;
 		cruz->order = cruz->shp.size();
 		cruz->IsOrdered = true;
-		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order*sizeof(int));
-		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order*sizeof(int));
-		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size*sizeof(double));
+		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order * sizeof(int));
+		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order * sizeof(int));
+		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size * sizeof(double));
 		int cumprod = 1;
 		cruz->unit[cruz->order - 1] = 1;
 		cruz->add_unit[cruz->order - 1] = 1;
@@ -165,9 +165,9 @@ namespace pwm
 		cruz->size = left*right;
 		cruz->order = cruz->shp.size();
 		cruz->IsOrdered = true;
-		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order*sizeof(int));
-		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order*sizeof(int));
-		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size*sizeof(double));
+		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order * sizeof(int));
+		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order * sizeof(int));
+		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size * sizeof(double));
 		int cumprod = 1;
 		cruz->unit[cruz->order - 1] = 1;
 		cruz->add_unit[cruz->order - 1] = 1;
@@ -215,9 +215,9 @@ namespace pwm
 		cruz->size = left*right;
 		cruz->order = cruz->shp.size();
 		cruz->IsOrdered = true;
-		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order*sizeof(int));
-		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order*sizeof(int));
-		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size*sizeof(double));
+		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order * sizeof(int));
+		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order * sizeof(int));
+		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size * sizeof(double));
 		int cumprod = 1;
 		cruz->unit[cruz->order - 1] = 1;
 		cruz->add_unit[cruz->order - 1] = 1;
@@ -264,9 +264,9 @@ namespace pwm
 		cruz->size = left*right;
 		cruz->order = cruz->shp.size();
 		cruz->IsOrdered = true;
-		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order*sizeof(int));
-		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order*sizeof(int));
-		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size*sizeof(double));
+		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order * sizeof(int));
+		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order * sizeof(int));
+		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size * sizeof(double));
 		int cumprod = 1;
 		cruz->unit[cruz->order - 1] = 1;
 		cruz->add_unit[cruz->order - 1] = 1;
@@ -311,9 +311,9 @@ namespace pwm
 		cruz->size = left*right;
 		cruz->order = cruz->shp.size();
 		cruz->IsOrdered = true;
-		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order*sizeof(int));
-		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order*sizeof(int));
-		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size*sizeof(double));
+		cruz->unit = (int *)MKL_realloc(cruz->unit, cruz->order * sizeof(int));
+		cruz->add_unit = (int *)MKL_realloc(cruz->add_unit, cruz->order * sizeof(int));
+		cruz->ptns = (double *)MKL_realloc(cruz->ptns, cruz->size * sizeof(double));
 		int cumprod = 1;
 		cruz->unit[cruz->order - 1] = 1;
 		cruz->add_unit[cruz->order - 1] = 1;
@@ -340,10 +340,10 @@ namespace pwm
 	void resolve_perm(std::string idxA, std::string idxB, int *&permA, int *&permB, int &com_cnt)
 	{
 		int *dumbA, *dumbB;
-		dumbA = (int *)MKL_malloc(idxA.size()*sizeof(int), MKLalignment);
-		permA = (int *)MKL_realloc(permA, idxA.size()*sizeof(int));
-		dumbB = (int *)MKL_malloc(idxB.size()*sizeof(int), MKLalignment);
-		permB = (int *)MKL_realloc(permB, idxB.size()*sizeof(int));
+		dumbA = (int *)MKL_malloc(idxA.size() * sizeof(int), MKLalignment);
+		permA = (int *)MKL_realloc(permA, idxA.size() * sizeof(int));
+		dumbB = (int *)MKL_malloc(idxB.size() * sizeof(int), MKLalignment);
+		permB = (int *)MKL_realloc(permB, idxB.size() * sizeof(int));
 		for (int i = 0; i < idxA.size(); i++)
 		{
 			dumbA[i] = i + 1;
@@ -408,11 +408,11 @@ namespace pwm
 	void resolve_perm(std::string idxA, std::string idxB, std::string idxC, int *&permA, int *&permB, int &com_cnt, int *&permC)
 	{
 		int *dumbA, *dumbB;
-		dumbA = (int *)MKL_malloc(idxA.size()*sizeof(int), MKLalignment);
-		permA = (int *)MKL_realloc(permA, idxA.size()*sizeof(int));
-		dumbB = (int *)MKL_malloc(idxB.size()*sizeof(int), MKLalignment);
-		permB = (int *)MKL_realloc(permB, idxB.size()*sizeof(int));
-		permC = (int *)MKL_realloc(permC, idxC.size()*sizeof(int));
+		dumbA = (int *)MKL_malloc(idxA.size() * sizeof(int), MKLalignment);
+		permA = (int *)MKL_realloc(permA, idxA.size() * sizeof(int));
+		dumbB = (int *)MKL_malloc(idxB.size() * sizeof(int), MKLalignment);
+		permB = (int *)MKL_realloc(permB, idxB.size() * sizeof(int));
+		permC = (int *)MKL_realloc(permC, idxC.size() * sizeof(int));
 		for (int i = 0; i < idxA.size(); i++)
 		{
 			dumbA[i] = i + 1;
@@ -516,7 +516,7 @@ namespace pwm
 			keep__diag = true;
 			break;
 		case 'R':
-			__diag = (double *)MKL_malloc(cols*sizeof(double), MKLalignment);
+			__diag = (double *)MKL_malloc(cols * sizeof(double), MKLalignment);
 			vdInv(cols, diag, __diag);
 			break;
 		default:
@@ -553,7 +553,7 @@ namespace pwm
 			keep__diag = true;
 			break;
 		case 'R':
-			__diag = (double *)MKL_malloc(rows*sizeof(double), MKLalignment);
+			__diag = (double *)MKL_malloc(rows * sizeof(double), MKLalignment);
 			vdInv(rows, diag, __diag);
 			break;
 		default:

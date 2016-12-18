@@ -112,7 +112,7 @@ namespace pwm
 			Tensor_cnt++;
 		}
 		tensor __x;
-		for (int i = 0; i < Tensor_cnt-1; i++)
+		for (int i = 0; i < Tensor_cnt - 1; i++)
 		{
 			pwm::tensorContractDiag('N', *MPS_io[i], GamSVD_in[i]->ptns, __x);
 			pwm::tensorContract(*MPS_io[i], __x, 2, __x);
