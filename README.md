@@ -13,7 +13,26 @@
 and a number of other LAPACK rountines, based on threaded routines, make effective use of parallelism: ?gesvd  
 does it mean I can use dgesvd without worries?
 
+3) prevent permute(or any other operation) applied on empty tensor, maybe add a empty flag in tensorclass?
+
+4) now I strongly think, I should use "tensor" through this whole project, discard "double *"
+
 ## log
+* 18th dec 2016, tested TensorClassSVD, small-scale test passed, below is the test code, using diff() to tell if they are equal
+```
+ 	pwm::tensor TA(17, 13, 0);
+	TA.ini_sequence();
+	pwm::tensor U, L, Vt;
+	double *lU = NULL, *lL = NULL, *lVt = NULL;
+	TA.svd(1, { {0,&L,0} });
+	//Vt.permute({ {2,1} });//should equal to lU
+	//U.permute({ {2,1} });//should equal to lVt
+	//TA.permute({ {2,1} });
+	TA.legacy_svd(1, 13, lU, lL, lVt);
+	return 0;
+```
+
+
 * 16th dec 2016, modified or added
     * CanoFinMPS
         * all

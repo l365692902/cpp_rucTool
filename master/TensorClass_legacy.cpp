@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <cstring>
 #include "mkl.h"
 #include "TensorClass.hpp"
 #include "Common.hpp"

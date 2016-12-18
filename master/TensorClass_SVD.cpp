@@ -6,6 +6,7 @@
 
 namespace pwm
 {
+	// all small-scale test passed
 	void tensor::svd(int idx_for_rows_in, std::array<tensor *, 3> ULV_out)
 	{
 		int rows = this->calc_shp(1, idx_for_rows_in);
@@ -28,18 +29,18 @@ namespace pwm
 			__rank = rows;
 		}
 
-		l = (double *)MKL_malloc(__rank*sizeof(double), MKLalignment);
+		l = (double *)MKL_malloc(__rank * sizeof(double), MKLalignment);
 		if (big_endian == true)
 		{
 			if (ULV_out[0] != 0)
 			{
-				u = (double *)MKL_malloc(__rows*__rank*sizeof(double), MKLalignment);
+				u = (double *)MKL_malloc(__rows*__rank * sizeof(double), MKLalignment);
 				jobu = 'S';
 			}
 
 			if (ULV_out[2] != 0)
 			{
-				vt = (double *)MKL_malloc(__cols*__cols*sizeof(double), MKLalignment);
+				vt = (double *)MKL_malloc(__cols*__cols * sizeof(double), MKLalignment);
 				jobvt = 'S';
 			}
 		}
@@ -47,21 +48,21 @@ namespace pwm
 		{
 			if (ULV_out[2] != 0)
 			{
-				u = (double *)MKL_malloc(__rows*__rank*sizeof(double), MKLalignment);
+				u = (double *)MKL_malloc(__rows*__rank * sizeof(double), MKLalignment);
 				jobu = 'S';
 			}
 
 			if (ULV_out[0] != 0)
 			{
-				vt = (double *)MKL_malloc(__cols*__cols*sizeof(double), MKLalignment);
+				vt = (double *)MKL_malloc(__cols*__cols * sizeof(double), MKLalignment);
 				jobvt = 'S';
 			}
 		}
-		superb = (double *)MKL_malloc(__rank*sizeof(double), MKLalignment);
-		shadow = (double *)MKL_malloc(this->size*sizeof(double), MKLalignment);
-		std::memcpy(shadow, this->ptns, this->size*sizeof(double));
+		superb = (double *)MKL_malloc((__rank - 1) * sizeof(double), MKLalignment);
+		shadow = (double *)MKL_malloc(this->size * sizeof(double), MKLalignment);
+		std::memcpy(shadow, this->ptns, this->size * sizeof(double));
 
-		LAPACKE_dgesvd(mtx_layout, jobu, jobvt, __rows, __cols, shadow, lda, l, u, __rows, vt, __rank, superb);
+		LAPACKE_dgesvd(mtx_layout, jobu, jobvt, __rows, __cols, shadow, lda, l, u, cols, vt, __rank, superb);
 
 		ULV_out[1]->reset({ {__rank} }, l);
 		if (big_endian == true)

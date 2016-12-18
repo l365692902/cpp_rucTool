@@ -980,5 +980,13 @@ namespace pwm
 		return;
 	}
 
-
+	void tensor::times(double in)
+	{
+#pragma omp parallel for
+		for (int i = 0; i < size; i++)
+		{
+			ptns[i] *= in;
+		}
+		return;
+	}
 }

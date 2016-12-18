@@ -11,10 +11,7 @@ int main()
 {
 	pwm::tensor TA(17, 13, 0);
 	TA.ini_sequence();
-	pwm::tensor U, L, Vt;
-	double *lU = NULL, *lL = NULL, *lVt = NULL;
-	TA.svd(1, { {&U,&L,&Vt} });
-	TA.legacy_svd(1, 13, lU, lL, lVt);
+	vdSqrt(TA.size, TA.ptns, TA.ptns);
 	return 0;
 }
 

@@ -38,6 +38,7 @@ namespace pwm
 		void permute(int *perm_idx, tensor &B);
 		void permute(std::array<int, MaxOrder> perm_idx);
 		void permute(std::array<int, MaxOrder> perm_idx, tensor &B);
+		void times(double in);
 		tensor& permute_assign(int *perm_idx);
 
 		//comparison with legacy

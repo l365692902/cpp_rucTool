@@ -1,6 +1,8 @@
 #include <array>
 #include <iostream>
 #include <algorithm>
+#include <cstring>
+#include <cmath>
 #include "Common.hpp"
 #include "CanoFinMPS.hpp"
 #include "TensorClass.hpp"
@@ -22,32 +24,106 @@ namespace pwm
 		}
 		Mbond = T_in[0]->shp.front();
 
-		double *Identity = (double *)MKL_malloc(Mbond*sizeof(double), MKLalignment);
+		double *Identity = (double *)MKL_malloc(Mbond * sizeof(double), MKLalignment);
 		std::fill_n(Identity, Mbond, 1.0);
 
-		tensor *__x = new tensor(Mbond, Mbond, 0);
-		std::memset(__x->ptns, 0, Mbond*Mbond*sizeof(double));
-		cblas_dcopy(Mbond, Identity, 1, __x->ptns, Mbond + 1);
+		tensor __x(Mbond, Mbond, 0);
+		tensor L, U_V;
+		std::memset(__x.ptns, 0, Mbond*Mbond * sizeof(double));
+		cblas_dcopy(Mbond, Identity, 1, __x.ptns, Mbond + 1);
 
 		std::array<int, MaxNumTensor> order;
 
 		switch (L_R)
 		{
 		case 'L':
-			*Env_out[0] = *__x;
+			*Env_out[0] = __x;
 			for (int i = 1; i < Tensor_cnt; i++)
 			{
-				pwm::tensorContract(*__x, *T_in[i], *__x);
-
+				pwm::tensorContract(*Env_out[i - 1], *T_in[i], __x);
+				__x.svd(2, { {0,&L,&U_V} });
+				L.times(1.0 / L.ptns[0]);
+				U_V.permute({ {2,1} });
+				pwm::tensorContractDiag('N', L.ptns, U_V, *Env_out[i]);
 			}
 			break;
 		case 'R':
-			*Env_out[Tensor_cnt - 1] = *__x;
+			*Env_out[Tensor_cnt - 1] = __x;
+			for (int i = Tensor_cnt - 2; i >= 0; i--)
+			{
+				pwm::tensorContract(*T_in[i], *Env_out[i + 1], __x);
+				__x.svd(1, { {&U_V,&L,0} });
+				L.times(1.0 / L.ptns[0]);
+				pwm::tensorContractDiag('N', U_V, L.ptns, *Env_out[i]);
+			}
 			break;
 		default:
 			break;
 		}
 
+		MKL_free(Identity);
+		__x.~tensor();
+		L.~tensor();
+		U_V.~tensor();
+		return;
+	}
+
+	void CanoTransform(std::array<tensor *, MaxNumTensor> Left_in,
+		std::array<tensor *, MaxNumTensor> Right_in,
+		std::array<tensor *, MaxNumTensor> MPS_io,
+		std::array<tensor *, MaxNumTensor> GamSVD_out)
+	{
+		int Tensor_cnt = 0;
+		int Mbond = MPS_io[0]->shp.front();
+		while (MPS_io[Tensor_cnt] != 0)
+		{
+			Tensor_cnt++;
+		}
+		tensor __x, U, L, V, P, Q;//P and Q can be saved
+		for (int i = 0; i < Tensor_cnt - 1; i++)
+		{
+			pwm::tensorContract(*Left_in[i + 1], *Right_in[i], __x);
+			__x.svd(1, { {&U,&L,&V} });
+			*GamSVD_out[i] = L;
+			pwm::getNorm2(GamSVD_out[i]->size, GamSVD_out[i]->ptns);
+			vdInvSqrt(GamSVD_out[i]->size, GamSVD_out[i]->ptns, L.ptns);//L^-0.5
+			tensorContractDiag('N', V, L.ptns, P);
+			tensorContract(*Right_in[i], P, P);
+			U.permute({ {2,1} });
+			tensorContractDiag('N', L.ptns, U, Q);
+			tensorContract(Q, *Left_in[i + 1], Q);
+			tensorContract(*MPS_io[i], P, *MPS_io[i]);
+			tensorContract(Q, *MPS_io[i + 1], *MPS_io[i + 1]);
+		}
+		GamSVD_out[Tensor_cnt - 1]->ptns = (double *)MKL_malloc(Mbond * sizeof(double), MKLalignment);
+		std::fill_n(GamSVD_out[Tensor_cnt - 1]->ptns, Mbond, 1.0 / std::sqrt(Mbond));
+
+		return;
+	}
+
+	void NormalizeMPS(std::array<tensor *, MaxNumTensor> MPS_io,
+		std::array<tensor *, MaxNumTensor> GamSVD_in,
+		std::array<double *, MaxNumTensor> Coef_out)
+	{
+		int Tensor_cnt = 0;
+		int Mbond = MPS_io[0]->shp.front();
+		while (MPS_io[Tensor_cnt] != 0)
+		{
+			Tensor_cnt++;
+		}
+		tensor __x;
+		for (int i = 0; i < Tensor_cnt-1; i++)
+		{
+			pwm::tensorContractDiag('N', *MPS_io[i], GamSVD_in[i]->ptns, __x);
+			pwm::tensorContract(*MPS_io[i], __x, 2, __x);
+			*Coef_out[i] = std::sqrt(__x.ptns[0] / GamSVD_in[(i ? i : Tensor_cnt) - 1]->ptns[0]);
+			MPS_io[i]->times(1.0 / *Coef_out[i]);
+		}
+
+		pwm::tensorContractDiag('N', GamSVD_in[Tensor_cnt - 2]->ptns, *MPS_io[Tensor_cnt - 1], __x);
+		pwm::tensorContract(2, *MPS_io[Tensor_cnt - 1], __x, __x);
+		*Coef_out[Tensor_cnt - 1] = std::sqrt(__x.ptns[0] / GamSVD_in[Tensor_cnt - 1]->ptns[0]);
+		MPS_io[Tensor_cnt - 1]->times(1.0 / *Coef_out[Tensor_cnt - 1]);
 		return;
 	}
 
@@ -59,8 +135,8 @@ namespace pwm
 	//    2      
 	// 1__|__3   
 	void CanoFinMPS(
-		std::array<pwm::tensor *, MaxNumTensor> T_io, 
-		std::array<pwm::tensor *, MaxNumTensor> Gam_out, 
+		std::array<pwm::tensor *, MaxNumTensor> T_io,
+		std::array<pwm::tensor *, MaxNumTensor> Gam_out,
 		std::array<double *, MaxNumTensor> coef_out)
 	{
 		int Tensor_cnt = 0;
@@ -73,20 +149,16 @@ namespace pwm
 		//std::cout << "sizeof(pwm::tensor *) " << sizeof(pwm::tensor *) << std::endl;
 		std::array<tensor *, MaxNumTensor> Left_env{};
 		std::array<tensor *, MaxNumTensor> Right_env{};
-		std::array<double *, MaxNumTensor> redun_lam{};
+		getEnv('L', T_io, Left_env);
+		getEnv('R', T_io, Right_env);
+
+		CanoTransform(Left_env, Right_env, T_io, Gam_out);
+		NormalizeMPS(T_io, Gam_out, coef_out);
 
 		for (int i = 0; i < Tensor_cnt; i++)
 		{
-			Left_env[i] = new tensor();
-			Right_env[i] = new tensor();
-		}
-
-		pwm::applyMPSsOnIdentity('L', T_io, Left_env);
-		pwm::applyMPSsOnIdentity('R', T_io, Right_env);
-
-		for (int i = 0; i < Tensor_cnt; i++)
-		{
-
+			Left_env[i]->~tensor();
+			Right_env[i]->~tensor();
 		}
 		return;
 	}
