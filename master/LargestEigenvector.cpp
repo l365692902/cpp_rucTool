@@ -81,8 +81,8 @@ namespace pwm
 			error_cnt = 0;
 			for (int i = 0; i < Tensor_cnt; i++)
 			{
-				applyOneMPS(L_R, *T_in[order[i]], x_in, *lam_out[order[i]]);
 				*y_out[order[i]] = x_in;
+				applyOneMPS(L_R, *T_in[order[i]], x_in, *lam_out[order[i]]);
 				error[error_cnt] = p_lam[order[i]] - *lam_out[order[i]];
 				error_cnt++;
 				p_lam[order[i]] = *lam_out[order[i]];//for next step
@@ -130,58 +130,6 @@ namespace pwm
 			break;
 		}
 		norm = getNorm2(x_io.size, x_io.ptns);
-		return;
-	}
-
-	void applyMPSsOnIdentity(char L_R,
-		std::array<tensor *, MaxNumTensor> T_in,
-		std::array<tensor *, MaxNumTensor> Env_out)
-	{
-		int Tensor_cnt = 0, Mbond = 1;
-		while (T_in[Tensor_cnt] != 0)
-		{
-			Tensor_cnt++;
-		}
-		Mbond = T_in[0]->shp[0];
-
-		//a vector contains 1 1 1 ...
-		double *Identity = (double *)MKL_malloc(Mbond * sizeof(double), MKLalignment);
-		//this is a wrong calling
-		std::memset(Identity, 1.0, Mbond * sizeof(double));
-
-		//a diagnal matrix contains 1 1 1 ...
-		tensor *__x = new tensor(Mbond, Mbond, 0);
-		//this is a wrong calling
-		std::memset(__x->ptns, 0.0, sizeof(double));
-		cblas_dcopy(Mbond, Identity, 1, __x->ptns, Mbond + 1);
-
-		*Env_out[0] = *__x;
-
-		double redun_norm;
-		switch (L_R)
-		{
-		case 'L':
-			for (int i = 0; i < Tensor_cnt - 1; i++)
-			{
-				applyOneMPS(L_R, *T_in[i], *__x, redun_norm);
-				*Env_out[i + 1] = *__x;
-			}
-			break;
-		case 'R':
-			for (int i = Tensor_cnt - 1; i > 0; i--)
-			{
-				applyOneMPS(L_R, *T_in[i], *__x, redun_norm);
-				*Env_out[i - 1] = *__x;
-			}
-			break;
-		default:
-			std::cout << "applyMPSsOnIdentity::mod_mismatch" << std::endl;
-			break;
-		}
-		MKL_free(Identity);
-		__x->~tensor();
-
-
 		return;
 	}
 

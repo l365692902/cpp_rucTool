@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cmath>
+#include <ctime>
 #include "Common.hpp"
 #include "CanoFinMPS.hpp"
 #include "TensorClass.hpp"
@@ -32,18 +33,15 @@ namespace pwm
 		std::memset(__x.ptns, 0, Mbond*Mbond * sizeof(double));
 		cblas_dcopy(Mbond, Identity, 1, __x.ptns, Mbond + 1);
 
-		std::array<int, MaxNumTensor> order;
-
 		switch (L_R)
 		{
 		case 'L':
 			*Env_out[0] = __x;
 			for (int i = 1; i < Tensor_cnt; i++)
 			{
-				pwm::tensorContract(*Env_out[i - 1], *T_in[i], __x);
+				pwm::tensorContract(*Env_out[i - 1], *T_in[i - 1], __x);
 				__x.svd(2, { {0,&L,&U_V} });
 				L.times(1.0 / L.ptns[0]);
-				U_V.permute({ {2,1} });
 				pwm::tensorContractDiag('N', L.ptns, U_V, *Env_out[i]);
 			}
 			break;
@@ -51,7 +49,7 @@ namespace pwm
 			*Env_out[Tensor_cnt - 1] = __x;
 			for (int i = Tensor_cnt - 2; i >= 0; i--)
 			{
-				pwm::tensorContract(*T_in[i], *Env_out[i + 1], __x);
+				pwm::tensorContract(*T_in[i + 1], *Env_out[i + 1], __x);
 				__x.svd(1, { {&U_V,&L,0} });
 				L.times(1.0 / L.ptns[0]);
 				pwm::tensorContractDiag('N', U_V, L.ptns, *Env_out[i]);
@@ -62,9 +60,6 @@ namespace pwm
 		}
 
 		MKL_free(Identity);
-		__x.~tensor();
-		L.~tensor();
-		U_V.~tensor();
 		return;
 	}
 
@@ -87,6 +82,7 @@ namespace pwm
 			*GamSVD_out[i] = L;
 			pwm::getNorm2(GamSVD_out[i]->size, GamSVD_out[i]->ptns);
 			vdInvSqrt(GamSVD_out[i]->size, GamSVD_out[i]->ptns, L.ptns);//L^-0.5
+			V.permute({ {2,1} });
 			tensorContractDiag('N', V, L.ptns, P);
 			tensorContract(*Right_in[i], P, P);
 			U.permute({ {2,1} });
@@ -97,7 +93,7 @@ namespace pwm
 		}
 		GamSVD_out[Tensor_cnt - 1]->ptns = (double *)MKL_malloc(Mbond * sizeof(double), MKLalignment);
 		std::fill_n(GamSVD_out[Tensor_cnt - 1]->ptns, Mbond, 1.0 / std::sqrt(Mbond));
-
+		GamSVD_out[Tensor_cnt - 1]->reset({ {Mbond} });
 		return;
 	}
 
@@ -142,16 +138,37 @@ namespace pwm
 		int Tensor_cnt = 0;
 		while (T_io[Tensor_cnt] != 0)
 		{
-			std::cout << T_io[Tensor_cnt] << std::endl;
 			Tensor_cnt++;
 		}
+		int Mbond = T_io[0]->shp.front();
 		//std::cout << "sizeof(pwm::tensor) " << sizeof(pwm::tensor) << std::endl;
 		//std::cout << "sizeof(pwm::tensor *) " << sizeof(pwm::tensor *) << std::endl;
 		std::array<tensor *, MaxNumTensor> Left_env{};
 		std::array<tensor *, MaxNumTensor> Right_env{};
-		getEnv('L', T_io, Left_env);
-		getEnv('R', T_io, Right_env);
-
+		std::array<double *, MaxNumTensor> coef{};
+		for (int i = 0; i < Tensor_cnt; i++)
+		{
+			Left_env[i] = new tensor();
+			Right_env[i] = new tensor();
+			coef[i] = new double;
+		}
+		//getEnv('L', T_io, Left_env);//checked
+		//getEnv('R', T_io, Right_env);//checked
+		tensor __x(Mbond, Mbond, 0);
+		pwm::Rand myrand(static_cast<unsigned long long>(time(0)));
+		__x.ini_rand(myrand);
+		pwm::largestEigenvalue('L', T_io, __x, 1e-13, 500, Left_env, coef);
+		pwm::largestEigenvalue('R', T_io, __x, 1e-13, 500, Right_env, coef);
+		tensor __u, __l, __v;
+		for (int i = 0; i < Tensor_cnt; i++)
+		{
+			Left_env[i]->svd(1, { {&__u,&__l,&__v} });
+			vdSqrt(__l.size, __l.ptns, __l.ptns);
+			pwm::tensorContractDiag('N', __l.ptns, __v, *Left_env[i]);
+			Right_env[i]->svd(1, { {&__u,&__l,&__v} });
+			vdSqrt(__l.size, __l.ptns, __l.ptns);
+			pwm::tensorContractDiag('N', __u, __l.ptns, *Right_env[i]);
+		}
 		CanoTransform(Left_env, Right_env, T_io, Gam_out);
 		NormalizeMPS(T_io, Gam_out, coef_out);
 
@@ -159,6 +176,7 @@ namespace pwm
 		{
 			Left_env[i]->~tensor();
 			Right_env[i]->~tensor();
+			delete coef[i];
 		}
 		return;
 	}

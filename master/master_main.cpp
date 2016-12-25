@@ -7,10 +7,44 @@
 
 #include <cstdarg>
 
+int main_largest2()
+{
+	pwm::Rand myrand(2);
+	pwm::tensor TA(3, 2, 3, 0), TB(3, 2, 3, 0), TC(3, 2, 3, 0);
+	pwm::tensor Ga, Gb, Gc;
+	pwm::tensor x(3, 3, 0);
+	double coefa, coefb, coefc;
+	TA.ini_rand(myrand);
+	TB.ini_rand(myrand);
+	TC.ini_rand(myrand);
+	x.ini_rand(myrand);
+	pwm::largestEigenvalue('L', { {&TA,&TB,&TC} }, x, 1e-13, 500, { {&Ga,&Gb,&Gc} }, { {&coefa,&coefb,&coefc} });
+
+	std::cout << std::endl;
+	return 0;
+}
+
 int main()
 {
-	pwm::tensor TA(17, 13, 0);
-	TA.ini_sequence();
+	pwm::Rand myrand(2);
+	pwm::tensor TA(3, 2, 3, 0), TB(3, 2, 3, 0), TC(3, 2, 3, 0);
+	pwm::tensor Ga, Gb, Gc;
+	double coefa, coefb, coefc;
+	//TA.ini_sequence();
+	//TB.ini_sequence();
+	TA.ini_rand(myrand);
+	TB.ini_rand(myrand);
+	TC.ini_rand(myrand);
+	TA.permute({ {3,2,1} });
+	TB.permute({ {3,2,1} });
+	TC.permute({ {3,2,1} });
+	pwm::CanoFinMPS({ {&TA,&TB,&TC} }, { {&Ga,&Gb,&Gc} }, { {&coefa,&coefb,&coefc} });
+	pwm::tensor temp;
+	pwm::tensorContractDiag('N', Ga.ptns, TB, temp);
+	pwm::tensorContract(2, temp, TB, temp);//should be equal to Gb
+	pwm::tensorContract(2, TB, TB, temp);
+	//pwm::getDiff('N',10)
+
 	vdSqrt(TA.size, TA.ptns, TA.ptns);
 	return 0;
 }

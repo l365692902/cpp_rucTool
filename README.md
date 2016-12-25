@@ -26,7 +26,12 @@ does it mean I can use dgesvd without worries?
 
 7) I need to reconsider the structre of project, I think should put all one-tensor operators below TensorClass, and intergrate entire vml into tensor etc.
 
+8) svd might give exact "0" rather than a tiny digit, thus it can not be inversed. is this a problem?
+
 ## log
+
+* 25th dec 2016, finished canoFinMPS, checked right. the only problem is accuracy(1.0013 vs 0.9987; 0.05076 vs 0.05062; 0.0004925 vs 0.0004912), i guess it might have something to do with normalization, last normalization.
+
 * 18th dec 2016, tested TensorClassSVD, small-scale test passed, below is the test code, using diff() to tell if they are equal
 ```
  	pwm::tensor TA(17, 13, 0);

@@ -195,7 +195,7 @@ namespace pwm
 		ptns = (double *)MKL_realloc(ptns, size * sizeof(double));
 		for (int i = 0; i < size; i++)
 		{
-			ptns[i] = i;
+			ptns[i] = double(i + 1.0) / 10.0;
 		}
 		return;
 	}
