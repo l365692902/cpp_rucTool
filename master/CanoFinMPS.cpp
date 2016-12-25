@@ -91,9 +91,23 @@ namespace pwm
 			tensorContract(*MPS_io[i], P, *MPS_io[i]);
 			tensorContract(Q, *MPS_io[i + 1], *MPS_io[i + 1]);
 		}
-		GamSVD_out[Tensor_cnt - 1]->ptns = (double *)MKL_malloc(Mbond * sizeof(double), MKLalignment);
-		std::fill_n(GamSVD_out[Tensor_cnt - 1]->ptns, Mbond, 1.0 / std::sqrt(Mbond));
-		GamSVD_out[Tensor_cnt - 1]->reset({ {Mbond} });
+		pwm::tensorContract(*Left_in[0], *Right_in[Tensor_cnt - 1], __x);
+		__x.svd(1, { {&U,&L,&V} });
+		*GamSVD_out[Tensor_cnt - 1] = L;
+		pwm::getNorm2(GamSVD_out[Tensor_cnt - 1]->size, GamSVD_out[Tensor_cnt - 1]->ptns);
+		vdInvSqrt(GamSVD_out[Tensor_cnt - 1]->size, GamSVD_out[Tensor_cnt - 1]->ptns, L.ptns);
+		V.permute({ {2,1} });
+		tensorContractDiag('N', V, L.ptns, P);
+		tensorContract(*Right_in[Tensor_cnt - 1], P, P);
+		U.permute({ {2,1} });
+		tensorContractDiag('N', L.ptns, U, Q);
+		tensorContract(Q, *Left_in[0], Q);
+		tensorContract(*MPS_io[Tensor_cnt - 1], P, *MPS_io[Tensor_cnt - 1]);
+		tensorContract(Q, *MPS_io[0], *MPS_io[0]);
+
+		//GamSVD_out[Tensor_cnt - 1]->ptns = (double *)MKL_malloc(Mbond * sizeof(double), MKLalignment);
+		//std::fill_n(GamSVD_out[Tensor_cnt - 1]->ptns, Mbond, 1.0 / std::sqrt(Mbond));
+		//GamSVD_out[Tensor_cnt - 1]->reset({ {Mbond} });
 		return;
 	}
 

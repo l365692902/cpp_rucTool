@@ -50,9 +50,9 @@ namespace pwm
 			}
 			break;
 		case 'R':
-			for (int i = Tensor_cnt - 1; i >= 0; i--)
+			for (int i = 0; i < Tensor_cnt; i++)
 			{
-				order[i] = i;//n...4,3,2,1,0
+				order[i] = Tensor_cnt - 1 - i;//n...4,3,2,1,0
 			}
 			break;
 		default:
@@ -79,17 +79,17 @@ namespace pwm
 		while (error_total > Converge_in)
 		{
 			error_cnt = 0;
-			for (int i = 0; i < Tensor_cnt; i++)
+			for (int j = 0; j < Tensor_cnt; j++)
 			{
-				*y_out[order[i]] = x_in;
-				applyOneMPS(L_R, *T_in[order[i]], x_in, *lam_out[order[i]]);
-				error[error_cnt] = p_lam[order[i]] - *lam_out[order[i]];
+				*y_out[order[j]] = x_in;
+				applyOneMPS(L_R, *T_in[order[j]], x_in, *lam_out[order[j]]);
+				error[error_cnt] = p_lam[order[j]] - *lam_out[order[j]];
 				error_cnt++;
-				p_lam[order[i]] = *lam_out[order[i]];//for next step
-				vdSub(x_size, p_y[order[i]], y_out[order[i]]->ptns, p_y[order[i]]);
-				error[error_cnt] = getMax(x_size, p_y[order[i]]);
+				p_lam[order[j]] = *lam_out[order[j]];//for next step
+				vdSub(x_size, p_y[order[j]], y_out[order[j]]->ptns, p_y[order[j]]);
+				error[error_cnt] = getMax(x_size, p_y[order[j]]);
 				error_cnt++;
-				std::memcpy(p_y[order[i]], y_out[order[i]]->ptns, x_size * sizeof(double));//for next step
+				std::memcpy(p_y[order[j]], y_out[order[j]]->ptns, x_size * sizeof(double));//for next step
 			}
 			error_total = getMax(error_cnt, error.data());
 			std::cout << "error: " << error_total << " lambda: " << *lam_out[0] << std::endl;

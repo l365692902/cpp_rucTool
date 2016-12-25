@@ -19,6 +19,18 @@ int main_largest2()
 	TC.ini_rand(myrand);
 	x.ini_rand(myrand);
 	pwm::largestEigenvalue('L', { {&TA,&TB,&TC} }, x, 1e-13, 500, { {&Ga,&Gb,&Gc} }, { {&coefa,&coefb,&coefc} });
+	
+	x = Ga;
+	pwm::applyOneMPS('L', TA, x, coefa);//=Gb
+	pwm::applyOneMPS('L', TB, x, coefa);//=Gc
+	pwm::applyOneMPS('L', TC, x, coefa);//=Ga
+
+	pwm::largestEigenvalue('R', { {&TA,&TB,&TC} }, x, 1e-13, 500, { {&Ga,&Gb,&Gc} }, { {&coefa,&coefb,&coefc} });
+
+	x = Ga;
+	pwm::applyOneMPS('R', TA, x, coefa);//=Gc
+	pwm::applyOneMPS('R', TC, x, coefa);//=Gb
+	pwm::applyOneMPS('R', TB, x, coefa);//=Ga
 
 	std::cout << std::endl;
 	return 0;
@@ -40,10 +52,23 @@ int main()
 	TC.permute({ {3,2,1} });
 	pwm::CanoFinMPS({ {&TA,&TB,&TC} }, { {&Ga,&Gb,&Gc} }, { {&coefa,&coefb,&coefc} });
 	pwm::tensor temp;
+	pwm::tensorContractDiag('N', TB, Gb.ptns, temp);
+	pwm::tensorContract(temp, TB, 2, temp);//=Ga
+
 	pwm::tensorContractDiag('N', Ga.ptns, TB, temp);
-	pwm::tensorContract(2, temp, TB, temp);//should be equal to Gb
-	pwm::tensorContract(2, TB, TB, temp);
-	//pwm::getDiff('N',10)
+	pwm::tensorContract(2, temp, TB, temp);//=Gb right
+
+	pwm::tensorContractDiag('N', TA, Ga.ptns, temp);
+	pwm::tensorContract(TA, temp, 2, temp);//=Gc
+
+	pwm::tensorContractDiag('N', Gc.ptns, TA, temp);
+	pwm::tensorContract(2, temp, TA, temp);//=Ga right
+
+	pwm::tensorContractDiag('N', TC, Gc.ptns, temp);
+	pwm::tensorContract(TC, temp, 2, temp);//=Gb
+
+	pwm::tensorContractDiag('N', Gb.ptns, TC, temp);
+	pwm::tensorContract(2, temp, TC, temp);//=Gc right
 
 	vdSqrt(TA.size, TA.ptns, TA.ptns);
 	return 0;
