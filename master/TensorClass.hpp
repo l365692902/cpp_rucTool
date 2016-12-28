@@ -23,7 +23,9 @@ namespace pwm
 		tensor(std::array<int, MaxOrder> in);
 		void reset(std::array<int, MaxOrder> shape, double * pointer);
 		void reset(std::array<int, MaxOrder> in);
+		void renew(std::array<int, MaxOrder> in);
 		void reset();
+		void renew();
 		void assign(double * in);
 		void ini_rand(pwm::Rand &rand);
 		void ini_sequence();

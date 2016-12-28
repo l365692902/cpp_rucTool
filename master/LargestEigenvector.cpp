@@ -30,7 +30,8 @@ namespace pwm
 		std::array<double *, MaxNumTensor> lam_out
 	)
 	{
-		int Tensor_cnt = 0, x_size = x_in.size;
+		int Tensor_cnt = 0; //x_size = x_in.size;
+		int iterNo = 0;
 		while (T_in[Tensor_cnt] != 0)
 		{
 			Tensor_cnt++;
@@ -59,7 +60,15 @@ namespace pwm
 			std::cout << "largestEigenvalue::mod_mismatch" << std::endl;
 			break;
 		}
-		while (error0 > Converge_in)
+
+		for (int i = 0; i < Tensor_cnt; i++)//one time
+		{
+			p_y[i] = (double *)MKL_calloc(x_in.size, sizeof(double), MKLalignment);
+			applyOneMPS(L_R, *T_in[order[i]], x_in, *lam_out[order[i]]);
+		}
+		iterNo++;
+
+		while (error0 > Converge_in && iterNo < MaxIter_in)
 		{
 			for (int i = 0; i < Tensor_cnt; i++)//one time
 			{
@@ -67,16 +76,13 @@ namespace pwm
 			}
 			error0 = std::abs(*lam_out[0] - p_lam0);
 			p_lam0 = *lam_out[0];
+			iterNo++;
 			//error0 = getMax(cntT, sub_lam.data());
 			std::cout << "error: " << error0 << " lambda: " << *lam_out[0] << std::endl;
 		}
-		for (int i = 0; i < Tensor_cnt; i++)
-		{
-			p_y[i] = (double *)MKL_calloc(x_size, sizeof(double), MKLalignment);
-		}
 
 		int error_cnt = 0;
-		while (error_total > Converge_in)
+		while (error_total > Converge_in && iterNo < MaxIter_in)
 		{
 			error_cnt = 0;
 			for (int j = 0; j < Tensor_cnt; j++)
@@ -86,12 +92,13 @@ namespace pwm
 				error[error_cnt] = p_lam[order[j]] - *lam_out[order[j]];
 				error_cnt++;
 				p_lam[order[j]] = *lam_out[order[j]];//for next step
-				vdSub(x_size, p_y[order[j]], y_out[order[j]]->ptns, p_y[order[j]]);
-				error[error_cnt] = getMax(x_size, p_y[order[j]]);
+				vdSub(y_out[order[j]]->size, p_y[order[j]], y_out[order[j]]->ptns, p_y[order[j]]);
+				error[error_cnt] = getMax(y_out[order[j]]->size, p_y[order[j]]);
 				error_cnt++;
-				std::memcpy(p_y[order[j]], y_out[order[j]]->ptns, x_size * sizeof(double));//for next step
+				std::memcpy(p_y[order[j]], y_out[order[j]]->ptns, y_out[order[j]]->size * sizeof(double));//for next step
 			}
 			error_total = getMax(error_cnt, error.data());
+			iterNo++;
 			std::cout << "error: " << error_total << " lambda: " << *lam_out[0] << std::endl;
 		}
 

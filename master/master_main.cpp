@@ -39,7 +39,8 @@ int main_largest2()
 int main()
 {
 	pwm::Rand myrand(2);
-	pwm::tensor TA(3, 2, 3, 0), TB(3, 2, 3, 0), TC(3, 2, 3, 0);
+	//pwm::tensor TA(3, 2, 4, 0), TB(4, 2, 5, 0), TC(5, 2, 3, 0);
+	pwm::tensor TA(4, 2, 3, 0), TB(5, 2, 4, 0), TC(3, 2, 5, 0);
 	pwm::tensor Ga, Gb, Gc;
 	double coefa, coefb, coefc;
 	//TA.ini_sequence();
@@ -47,9 +48,9 @@ int main()
 	TA.ini_rand(myrand);
 	TB.ini_rand(myrand);
 	TC.ini_rand(myrand);
-	TA.permute({ {3,2,1} });
-	TB.permute({ {3,2,1} });
-	TC.permute({ {3,2,1} });
+	TA.permute({ {3,2,1} });//3,2,4
+	TB.permute({ {3,2,1} });//4,2,5
+	TC.permute({ {3,2,1} });//5,2,3
 	pwm::CanoFinMPS({ {&TA,&TB,&TC} }, { {&Ga,&Gb,&Gc} }, { {&coefa,&coefb,&coefc} });
 	pwm::tensor temp;
 	pwm::tensorContractDiag('N', TB, Gb.ptns, temp);
